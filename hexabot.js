@@ -24,7 +24,7 @@ const APPROX = 1
 const INVALID = 2
 
 function makeBot () {
-  const bot = new Telegraf(process.env.HEXABOT_KEY)
+  const bot = new Telegraf(process.env.BOTTL_KEY)
 
   bot.use(async (ctx, next) => {
     const start = new Date()
@@ -62,8 +62,7 @@ function validateColor (color) {
 
 function searchByHex (rawColorHex) {
   const color = Color('#' + rawColorHex)
-  const [r, g, b] = color.rgb().array()
-  const colorHex = rgbToHex(r, g, b)
+  const colorHex = rgbToHex(color)
 
   const exactMatch = namedColors.find(color => color.hex === colorHex)
   if (exactMatch !== undefined) {
@@ -72,10 +71,6 @@ function searchByHex (rawColorHex) {
 
   const approxMatch = nearestColorName(colorHex)
   return [approxMatch.value, approxMatch.name, APPROX]
-}
-
-function rgbToHex (r, g, b) {
-  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)
 }
 
 function searchByName (colorName) {
@@ -127,9 +122,18 @@ function makeImageResponse (ctx, colorHex) {
 }
 
 function generateSvg (colorHex) {
+  const color = Color(colorHex)
+  const bgColor = rgbToHex(color.negate())
+
   let draw = SVG(document.documentElement).size(500, 500)
+  draw.rect(500, 500).fill(bgColor)
   draw.circle(400).fill(colorHex).move(50, 50)
   return draw.svg()
+}
+
+function rgbToHex (color) {
+  const [r, g, b] = color.rgb().array()
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)
 }
 
 makeBot()
