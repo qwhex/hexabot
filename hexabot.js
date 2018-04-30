@@ -24,7 +24,7 @@ const APPROX = 1
 const INVALID = 2
 
 function makeBot () {
-  const bot = new Telegraf(process.env.BOTTL_KEY)
+  const bot = new Telegraf(process.env.HEXA_KEY)
 
   bot.use(async (ctx, next) => {
     const start = new Date()
