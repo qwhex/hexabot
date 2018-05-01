@@ -63,7 +63,7 @@ function makeBot () {
 
           const extractedColors = Colibri.extractImageColors(img, 'css')
           for (let contentColor of extractedColors.content) {
-            return makeResponse(ctx, searchByHex(validateColor(rgbToHex(Color(contentColor)))))
+            makeResponse(ctx, searchByHex(validateColor(rgbToHex(Color(contentColor)))))
           }
         })
       )
