@@ -6,6 +6,7 @@ module.exports = {
   "extends": "standard",
   "rules": {
     "one-var": "off",
+    "no-var": "error",
     "max-len": [
       "warn", 120
     ],

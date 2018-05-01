@@ -3,16 +3,29 @@
   "version": "1.0.0",
   "description": "Color helper telegram robot",
   "main": "hexabot.js",
+  "bin": {
+    "hexabot": "./hexabot.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qwhex/hexabot.git"
+  },
   "scripts": {
+    "dev": "nodemon hexabot.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "telegram",
     "hex",
     "color",
+    "color extract",
     "css"
   ],
-  "author": "Mice Papai",
+  "author": {
+    "name": "Mice Papai",
+    "email": "qwhexz@gmail.com",
+    "url": "https://qwhex.com"
+  },
   "license": "MIT",
   "dependencies": {
     "canvas": "^1.6.10",
@@ -34,6 +47,7 @@
     "eslint-plugin-import": "^2.11.0",
     "eslint-plugin-node": "^6.0.1",
     "eslint-plugin-promise": "^3.7.0",
-    "eslint-plugin-standard": "^3.1.0"
+    "eslint-plugin-standard": "^3.1.0",
+    "nodemon": "^1.17.3"
   }
 }
