@@ -9,6 +9,11 @@ const pn = require('pn/fs')
 const fs = require('fs')
 const svg2png = require('svg2png')
 const path = require('path')
+const Colibri = require('colibrijs')
+const Image = require('canvas').Image
+const fetch = require('isomorphic-fetch')
+
+const TOKEN = process.env.HEXA_KEY
 
 const nearestColorName = (() => {
   let colors = {}
@@ -25,7 +30,7 @@ const APPROX = 1
 const INVALID = 2
 
 function makeBot () {
-  const bot = new Telegraf(process.env.HEXA_KEY)
+  const bot = new Telegraf(TOKEN)
 
   bot.use(async (ctx, next) => {
     const start = new Date()
@@ -43,6 +48,26 @@ function makeBot () {
     const colorHex = validateColor(query)
     const result = colorHex === null ? searchByName(query) : searchByHex(colorHex)
     makeResponse(ctx, result)
+  })
+
+  bot.on('photo', (ctx) => {
+    const thumbnailId = ctx.message.photo[0].file_id
+    const imgSavePath = path.resolve(__dirname, `./cache/img/${thumbnailId}`)
+
+    ctx.telegram.getFileLink(thumbnailId).then(thumbnailUrl => {
+      fetch(thumbnailUrl).then(image => image.body
+        .pipe(fs.createWriteStream(imgSavePath))
+        .on('close', () => {
+          let img = new Image()
+          img.src = fs.readFileSync(imgSavePath)
+
+          const extractedColors = Colibri.extractImageColors(img, 'css')
+          for (let contentColor of extractedColors.content) {
+            return makeResponse(ctx, searchByHex(validateColor(rgbToHex(Color(contentColor)))))
+          }
+        })
+      )
+    })
   })
 
   bot.startPolling()
@@ -111,6 +136,7 @@ function makeImageResponse (ctx, colorHex) {
     .then(buffer => {
       pn.writeFile(imagePath, buffer)
         .then(() => ctx.replyWithPhoto({ source: imagePath }))
+        .catch(e => console.error(e))
     })
     .catch(e => console.error(e))
 }
