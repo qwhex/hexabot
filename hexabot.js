@@ -8,6 +8,7 @@ const document = window.document
 const pn = require('pn/fs')
 const fs = require('fs')
 const svg2png = require('svg2png')
+const path = require('path')
 
 const nearestColorName = (() => {
   let colors = {}
@@ -40,14 +41,7 @@ function makeBot () {
   bot.on('text', (ctx) => {
     const query = ctx.message.text
     const colorHex = validateColor(query)
-
-    let result
-    if (colorHex === null) {
-      result = searchByName(query)
-    } else {
-      result = searchByHex(colorHex)
-    }
-
+    const result = colorHex === null ? searchByName(query) : searchByHex(colorHex)
     makeResponse(ctx, result)
   })
 
@@ -107,7 +101,7 @@ function makeResponse (ctx, result) {
 }
 
 function makeImageResponse (ctx, colorHex) {
-  const imagePath = `cache/${colorHex}.png`
+  const imagePath = path.resolve(__dirname, `./cache/${colorHex}.png`)
 
   if (fs.existsSync(imagePath)) {
     return ctx.replyWithPhoto({ source: imagePath })
@@ -116,7 +110,7 @@ function makeImageResponse (ctx, colorHex) {
   svg2png(generateSvg(colorHex), { width: 500, height: 500 })
     .then(buffer => {
       pn.writeFile(imagePath, buffer)
-      ctx.replyWithPhoto({ source: imagePath })
+        .then(() => ctx.replyWithPhoto({ source: imagePath }))
     })
     .catch(e => console.error(e))
 }
