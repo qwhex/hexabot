@@ -39,39 +39,40 @@ function makeBot () {
     console.log(`Response time ${ms}ms`, ctx.message)
   })
 
-  bot.catch((err) => {
-    console.log('Ooops', err)
-  })
+  bot.catch(err => console.error('Ooops', err))
 
-  bot.on('text', (ctx) => {
+  bot.on('text', ctx => {
     const query = ctx.message.text
     const colorHex = validateColor(query)
     const result = colorHex === null ? searchByName(query) : searchByHex(colorHex)
+
     makeResponse(ctx, result)
   })
 
-  bot.on('photo', (ctx) => {
+  bot.on('photo', ctx => {
     const thumbnailId = ctx.message.photo[0].file_id
     const imgSavePath = path.resolve(__dirname, `./cache/img/${thumbnailId}`)
 
     ctx.telegram.getFileLink(thumbnailId).then(thumbnailUrl => {
       fetch(thumbnailUrl).then(image => image.body
         .pipe(fs.createWriteStream(imgSavePath))
-        .on('close', () => {
-          let img = new Image()
-          img.src = fs.readFileSync(imgSavePath)
-
-          const extractedColors = Colibri.extractImageColors(img, 'css')
-          for (let contentColor of extractedColors.content) {
-            makeResponse(ctx, searchByHex(validateColor(rgbToHex(Color(contentColor)))))
-          }
-        })
+        .on('close', () => extractColors(ctx, imgSavePath))
       )
     })
   })
 
   bot.startPolling()
   return bot
+}
+
+function extractColors (ctx, imgPath) {
+  let img = new Image()
+  img.src = fs.readFileSync(imgPath)
+
+  const extractedColors = Colibri.extractImageColors(img, 'css')
+  for (let contentColor of extractedColors.content) {
+    makeResponse(ctx, searchByHex(rgbToHex(Color(contentColor)).slice()))
+  }
 }
 
 function validateColor (color) {
@@ -96,7 +97,7 @@ function searchByName (colorName) {
   const results = fuzzy.filter(
     colorName,
     namedColors,
-    { extract: (el) => el.name }
+    { extract: el => el.name }
   )
 
   if (results[0] === undefined) {
@@ -109,19 +110,17 @@ function searchByName (colorName) {
 }
 
 function makeResponse (ctx, result) {
-  // const senderId = ctx.message.from.id
-
   switch (result[2]) {
-    case EXACT:
-      makeImageResponse(ctx, result[0])
-      return ctx.replyWithHTML(`Exact match: <b>${result[1]}</b> (${result[0]})`)
-    case APPROX:
-      makeImageResponse(ctx, result[0])
-      return ctx.reply(`Closest match: ${result[1]} (${result[0]})`)
-    case INVALID:
-      return ctx.reply(`Not found: ${result[1]} (${result[0]})`)
-    default:
-      return ctx.reply(`🤷`)
+  case EXACT:
+    makeImageResponse(ctx, result[0])
+    return ctx.reply(`Exact match: ${result[1]} (${result[0]})`)
+  case APPROX:
+    makeImageResponse(ctx, result[0])
+    return ctx.reply(`Closest match: ${result[1]} (${result[0]})`)
+  case INVALID:
+    return ctx.reply(`Not found: ${result[1]} (${result[0]})`)
+  default:
+    return ctx.reply(`🤷`)
   }
 }
 
@@ -136,9 +135,9 @@ function makeImageResponse (ctx, colorHex) {
     .then(buffer => {
       pn.writeFile(imagePath, buffer)
         .then(() => ctx.replyWithPhoto({ source: imagePath }))
-        .catch(e => console.error(e))
+        .catch(err => console.error(err))
     })
-    .catch(e => console.error(e))
+    .catch(err => console.error(err))
 }
 
 function generateSvg (colorHex) {
