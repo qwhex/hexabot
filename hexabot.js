@@ -33,20 +33,15 @@ function makeBot () {
   const bot = new Telegraf(TOKEN)
 
   bot.use(async (ctx, next) => {
-    const start = new Date()
     await next()
-    const ms = new Date() - start
-    console.log(`Response time ${ms}ms`, ctx.message)
+    console.log(ctx.message)
   })
 
-  bot.catch(err => console.error('Ooops', err))
+  bot.catch(err => logError(err))
 
   bot.on('text', ctx => {
     const query = ctx.message.text
-    const colorHex = validateColor(query)
-    const result = colorHex === null ? searchByName(query) : searchByHex(colorHex)
-
-    makeResponse(ctx, result)
+    makeResponse(ctx, understandColor(query))
   })
 
   bot.on('photo', ctx => {
@@ -65,32 +60,33 @@ function makeBot () {
   return bot
 }
 
-function extractColors (ctx, imgPath) {
-  let img = new Image()
-  img.src = fs.readFileSync(imgPath)
-
-  const extractedColors = Colibri.extractImageColors(img, 'css')
-  for (let contentColor of extractedColors.content) {
-    makeResponse(ctx, searchByHex(colorToHex(Color(contentColor)).slice(1)))
+function understandColor (colorString) {
+  try {
+    return findColorMatch(Color('#' + hexize(colorString)))
+  } catch (error) {
+    return searchByName(colorString)
   }
 }
 
-function validateColor (color) {
-  const matches = color.match(colorRegex)
-  return matches !== null ? matches[1] : null
+function hexize (possibleHex) {
+  const matches = possibleHex.match(colorRegex)
+  return matches !== null ? matches[1] : possibleHex
 }
 
-function searchByHex (rawColorHex) {
-  const color = Color('#' + rawColorHex)
+function logError (error) {
+  console.error('Oops', error)
+}
+
+function findColorMatch (color) {
   const colorHex = colorToHex(color)
 
   const exactMatch = namedColors.find(color => color.hex === colorHex)
   if (exactMatch !== undefined) {
-    return [colorHex, exactMatch.name, EXACT]
+    return [EXACT, exactMatch.name, colorHex]
   }
 
   const approxMatch = nearestColorName(colorHex)
-  return [approxMatch.value, approxMatch.name, APPROX]
+  return [APPROX, approxMatch.name, approxMatch.value]
 }
 
 function searchByName (colorName) {
@@ -101,31 +97,43 @@ function searchByName (colorName) {
   )
 
   if (results[0] === undefined) {
-    return [colorName, 'Invalid color', INVALID]
+    return [INVALID, colorName, '']
   }
 
+  // Todo return results array, map exact, approx into it
   const match = namedColors[results[0].index]
   const matchType = match.name.toLowerCase() === colorName.toLowerCase() ? EXACT : APPROX
-  return [match.hex, match.name, matchType]
+  return [matchType, match.name, match.hex]
+}
+
+function extractColors (ctx, imgPath) {
+  let img = new Image()
+  img.src = fs.readFileSync(imgPath)
+
+  const extractedColors = Colibri.extractImageColors(img, 'css')
+  for (let contentColor of extractedColors.content.slice(0, 6)) {
+    makeResponse(ctx, findColorMatch(Color(contentColor)))
+  }
 }
 
 function makeResponse (ctx, result) {
-  switch (result[2]) {
+  const [matchType, colorName, colorHex] = result
+  switch (matchType) {
   case EXACT:
     makeImageResponse(ctx, result)
-    return ctx.reply(`Exact match: ${result[1]} ${result[0]}`)
+    return ctx.reply(`Exact match: ${colorName} ${colorHex}`)
   case APPROX:
     makeImageResponse(ctx, result)
-    return ctx.reply(`Closest match: ${result[1]} ${result[0]}`)
+    return ctx.reply(`Closest match: ${colorName} ${colorHex}`)
   case INVALID:
-    return ctx.reply(`🤷 ${result[1]} ${result[0]}`)
+    return ctx.reply(`🤷  ${colorName} ${colorHex}  🤷`)
   default:
-    return ctx.reply(`🤷`)
+    return ctx.reply(`wtf`)
   }
 }
 
 function makeImageResponse (ctx, result) {
-  const [colorHex, colorName] = result.slice(0, 2)
+  const [colorName, colorHex] = result.slice(1, 3)
   const filename = `${colorHex}.png`
   const imagePath = path.resolve(__dirname, `./cache/${filename}`)
 
