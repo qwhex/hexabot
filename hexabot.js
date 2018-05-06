@@ -100,7 +100,7 @@ function searchByName (colorName) {
     return [INVALID, colorName, '']
   }
 
-  // Todo return results array, map exact, approx into it
+  // Todo return results array > map exact, approx into it
   const match = namedColors[results[0].index]
   const matchType = match.name.toLowerCase() === colorName.toLowerCase() ? EXACT : APPROX
   return [matchType, match.name, match.hex]
@@ -175,7 +175,7 @@ function generateSvg (colorHex, colorName) {
 function getBgColor (color) {
   const negatedColor = color.negate()
 
-  if (color.contrast(negatedColor) >= 10) {
+  if (color.contrast(negatedColor) >= 5) {
     return negatedColor
   }
 
@@ -228,15 +228,25 @@ function drawHslBars (draw, color) {
   const height = 275
   const hsl = color.hsl().array()
   const colorHex = colorToHex(color)
+  const grayscaleHex = colorToHex(color.desaturate(1))
 
   draw.rect(50, Math.round((hsl[0] / 360) * height))
-    .fill(colorHex)
+    .fill(draw.gradient('linear', function (stop) {
+      stop.at(0, colorToHex(color.negate()))
+      stop.at(1, colorHex)
+    }).from(0, 0).to(0, 1))
     .move(550, 375)
   draw.rect(50, Math.round((hsl[1] / 100) * height))
-    .fill(colorHex)
+    .fill(draw.gradient('linear', function (stop) {
+      stop.at(0, grayscaleHex)
+      stop.at(1, colorHex)
+    }).from(0, 0).to(0, 1))
     .move(650, 375)
   draw.rect(50, Math.round((hsl[2] / 100) * height))
-    .fill(colorHex)
+    .fill(draw.gradient('linear', function (stop) {
+      stop.at(0, '#000')
+      stop.at(1, grayscaleHex)
+    }).from(0, 0).to(0, 1))
     .move(750, 375)
 
   return draw
