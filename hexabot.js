@@ -198,7 +198,7 @@ function drawColorCircle (group, fgColorHex, bgColorHex) {
 function drawTitle (group, fgColorHex, colorName) {
   const fontConfig = {
     fill: fgColorHex,
-    family: 'Andale Mono',
+    family: 'Andale Mono,monospace',
     size: '40px'
   }
 
@@ -240,16 +240,16 @@ function drawRgbBars (group, mainColor) {
   return group
 }
 
-function drawHslBars (group, color) {
+function drawHslBars (group, mainColor) {
   const height = 275
-  const hsl = color.hsl().array()
-  const rgb = color.rgb().array()
+  const hsl = mainColor.hsl().array()
+  const rgb = mainColor.rgb().array()
   const colorHex = rgbToHex(rgb)
-  const grayscaleHex = rgbToHex(color.desaturate(1).rgb().array())
+  const grayscaleHex = rgbToHex(mainColor.desaturate(1).rgb().array())
 
   group.rect(50, Math.round((hsl[0] / 360) * height))
     .fill(group.gradient('linear', function (stop) {
-      stop.at(0, rgbToHex(color.negate().rgb().array()))
+      stop.at(0, rgbToHex(mainColor.negate().rgb().array()))
       stop.at(1, colorHex)
     }).from(0, 0).to(0, 1))
     .move(550, 375)
