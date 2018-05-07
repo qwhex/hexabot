@@ -39,7 +39,7 @@ function makeBot () {
 
   bot.on('text', ctx => {
     const query = ctx.message.text
-    makeResponse(ctx, understandColor(query))
+    respond(ctx, understandColor(query))
   })
 
   bot.on('photo', ctx => {
@@ -76,7 +76,7 @@ function logError (error) {
 }
 
 function findClosestColor (color) {
-  const colorHex = colorToHex(color.rgb().array())
+  const colorHex = rgbToHex(color.rgb().array())
   const closestColor = colorOctree.closest(colorHex)
   const matchType = closestColor.d === 0 ? EXACT : APPROX
   return [matchType, closestColor.name, closestColor.hex]
@@ -111,19 +111,22 @@ function extractColors (ctx, imgPath) {
 
   const extractedColors = Colibri.extractImageColors(img, 'css')
   for (let contentColor of extractedColors.content.slice(0, 6)) {
-    makeResponse(ctx, findClosestColor(Color(contentColor)))
+    respond(ctx, findClosestColor(Color(contentColor)))
   }
 }
 
-function makeResponse (ctx, result) {
+function respond (ctx, result) {
   const [matchType, colorName, colorHex] = result
+
+  const colorInfo = getInfoString(colorName, colorHex)
+
   switch (matchType) {
   case EXACT:
-    makeImageResponse(ctx, result)
-    return ctx.reply(`Exact match: ${colorName} ${colorHex}`)
+    respondWithImage(ctx, result)
+    return ctx.reply(`${colorInfo}`)
   case APPROX:
-    makeImageResponse(ctx, result)
-    return ctx.reply(`Closest match: ${colorName} ${colorHex}`)
+    respondWithImage(ctx, result)
+    return ctx.reply(`Closest match:\n\n${colorInfo}`)
   case INVALID:
     return ctx.reply(`🤷  ${colorName} ${colorHex}  🤷`)
   default:
@@ -131,7 +134,14 @@ function makeResponse (ctx, result) {
   }
 }
 
-function makeImageResponse (ctx, result) {
+function getInfoString (colorName, colorHex) {
+  const color = Color(colorHex)
+  const rgb = color.rgb().string()
+  const hsl = color.hsl().string()
+  return [colorName, colorHex, rgb, hsl].join('\n')
+}
+
+function respondWithImage (ctx, result) {
   const [colorName, colorHex] = result.slice(1, 3)
   const filename = `${colorHex}.png`
   const imagePath = path.resolve(__dirname, `./cache/${filename}`)
@@ -160,99 +170,106 @@ function makeImageResponse (ctx, result) {
 }
 
 function generateSvg (colorHex, colorName) {
-  const color = Color(colorHex)
-  const bgColor = colorToHex(getBgColor(color).rgb().array())
+  const mainColor = Color(colorHex)
+  const bgColor = getBgColor(mainColor)
 
   let draw = SVG(document.documentElement).size(850, 700)
-  drawColorCircle(draw, colorHex, bgColor)
-  drawTitle(draw, colorHex, colorName)
-  drawRgbBars(draw, color)
-  drawHslBars(draw, color)
+  drawColorCircle(draw.group(), colorHex, rgbToHex(bgColor.rgb().array()))
+  drawTitle(draw.group(), colorHex, colorName)
+  drawRgbBars(draw.group(), mainColor)
+  drawHslBars(draw.group(), mainColor)
   return draw.svg()
 }
 
 function getBgColor (color) {
   const negatedColor = color.negate()
-
   if (color.contrast(negatedColor) >= 5) {
     return negatedColor
   }
-
   return color.isDark() ? Color('white') : Color('black')
 }
 
-function drawColorCircle (draw, fgColorHex, bgColorHex) {
-  draw.rect(950, 700).fill(bgColorHex)
-  draw.circle(400).fill(fgColorHex).move(50, 150)
-  return draw
+function drawColorCircle (group, fgColorHex, bgColorHex) {
+  group.rect(950, 700).fill(bgColorHex)
+  group.circle(400).fill(fgColorHex).move(50, 150)
+  return group
 }
 
-function drawTitle (draw, fgColorHex, colorName) {
+function drawTitle (group, fgColorHex, colorName) {
   const fontConfig = {
     fill: fgColorHex,
     family: 'Andale Mono',
     size: '40px'
   }
 
-  let colorNameText = draw.text(colorName)
+  let colorNameText = group.text(colorName)
   colorNameText.move(50, 50).font(fontConfig)
 
-  let colorHexText = draw.text(fgColorHex)
+  let colorHexText = group.text(fgColorHex)
   colorHexText.move(50, 575).font(fontConfig)
 
-  return draw
+  return group
 }
 
-function drawRgbBars (draw, color) {
+function drawRgbBars (group, mainColor) {
+  const rgb = mainColor.rgb().array()
   const height = 275
-  const rgb = color.rgb().array()
   const heights = rgb.map(attribute => {
     return Math.round((attribute / 255) * height)
   })
 
-  draw.rect(50, heights[0])
-    .fill(colorToHex([rgb[0], 0, 0]))
+  group.rect(50, heights[0])
+    .fill(group.gradient('linear', function (stop) {
+      stop.at(0, '#000000')
+      stop.at(1, rgbToHex([rgb[0], 0, 0]))
+    }).from(0, 0).to(0, 1))
     .move(550, 50)
-  draw.rect(50, heights[1])
-    .fill(colorToHex([0, rgb[1], 0]))
+  group.rect(50, heights[1])
+    .fill(group.gradient('linear', function (stop) {
+      stop.at(0, '#000000')
+      stop.at(1, rgbToHex([0, rgb[1], 0]))
+    }).from(0, 0).to(0, 1))
     .move(650, 50)
-  draw.rect(50, heights[2])
-    .fill(colorToHex([0, 0, rgb[2]]))
+  group.rect(50, heights[2])
+    .fill(group.gradient('linear', function (stop) {
+      stop.at(0, '#000000')
+      stop.at(1, rgbToHex([0, 0, rgb[2]]))
+    }).from(0, 0).to(0, 1))
     .move(750, 50)
 
-  return draw
+  return group
 }
 
-function drawHslBars (draw, color) {
+function drawHslBars (group, color) {
   const height = 275
   const hsl = color.hsl().array()
   const rgb = color.rgb().array()
-  const colorHex = colorToHex(rgb)
-  const grayscaleHex = colorToHex(color.desaturate(1).rgb().array())
+  const colorHex = rgbToHex(rgb)
+  const grayscaleHex = rgbToHex(color.desaturate(1).rgb().array())
 
-  draw.rect(50, Math.round((hsl[0] / 360) * height))
-    .fill(draw.gradient('linear', function (stop) {
-      stop.at(0, colorToHex(color.negate().rgb().array()))
+  group.rect(50, Math.round((hsl[0] / 360) * height))
+    .fill(group.gradient('linear', function (stop) {
+      stop.at(0, rgbToHex(color.negate().rgb().array()))
       stop.at(1, colorHex)
     }).from(0, 0).to(0, 1))
     .move(550, 375)
-  draw.rect(50, Math.round((hsl[1] / 100) * height))
-    .fill(draw.gradient('linear', function (stop) {
+  group.rect(50, Math.round((hsl[1] / 100) * height))
+    .fill(group.gradient('linear', function (stop) {
       stop.at(0, grayscaleHex)
       stop.at(1, colorHex)
     }).from(0, 0).to(0, 1))
     .move(650, 375)
-  draw.rect(50, Math.round((hsl[2] / 100) * height))
-    .fill(draw.gradient('linear', function (stop) {
+  group.rect(50, Math.round((hsl[2] / 100) * height))
+    .fill(group.gradient('linear', function (stop) {
       stop.at(0, '#000')
       stop.at(1, grayscaleHex)
     }).from(0, 0).to(0, 1))
     .move(750, 375)
 
-  return draw
+  return group
 }
 
-function colorToHex (rgbArray) {
+function rgbToHex (rgbArray) {
   const [r, g, b] = rgbArray
   return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)
 }
@@ -264,8 +281,12 @@ if (require.main === module) {
 exports.EXACT = EXACT
 exports.APPROX = APPROX
 exports.INVALID = INVALID
-exports.colorToHex = colorToHex
+exports.rgbToHex = rgbToHex
 exports.hexize = hexize
 exports.findClosestColor = findClosestColor
 exports.understandColor = understandColor
 exports.getBgColor = getBgColor
+exports.searchByName = searchByName
+exports.drawColorCircle = drawColorCircle
+exports.drawRgbBars = drawRgbBars
+exports.drawHslBars = drawHslBars
