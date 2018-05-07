@@ -15,13 +15,11 @@ const fetch = require('isomorphic-fetch')
 
 const TOKEN = process.env.HEXA_KEY
 
-const nearestColorName = (() => {
-  let colors = {}
-  namedColors.forEach(color => {
-    colors[color.name] = color.hex
-  })
-  return require('nearest-color').from(colors)
-})()
+let colorOctree = require('color-octree')
+colorOctree.add(namedColors)
+
+let nameToColor = []
+namedColors.forEach(color => { nameToColor[color.name.toLowerCase()] = color })
 
 const colorRegex = /^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/
 
@@ -62,7 +60,7 @@ function makeBot () {
 
 function understandColor (colorString) {
   try {
-    return findColorMatch(Color('#' + hexize(colorString)))
+    return findClosestColor(Color('#' + hexize(colorString)))
   } catch (error) {
     return searchByName(colorString)
   }
@@ -77,33 +75,34 @@ function logError (error) {
   console.error('Oops', error)
 }
 
-function findColorMatch (color) {
-  const colorHex = colorToHex(color)
-
-  const exactMatch = namedColors.find(color => color.hex === colorHex)
-  if (exactMatch !== undefined) {
-    return [EXACT, exactMatch.name, colorHex]
-  }
-
-  const approxMatch = nearestColorName(colorHex)
-  return [APPROX, approxMatch.name, approxMatch.value]
+function findClosestColor (color) {
+  const colorHex = colorToHex(color.rgb().array())
+  const closestColor = colorOctree.closest(colorHex)
+  const matchType = closestColor.d === 0 ? EXACT : APPROX
+  return [matchType, closestColor.name, closestColor.hex]
 }
 
 function searchByName (colorName) {
+  const lowerCaseName = colorName.toLowerCase() // Todo unidecode
+  if (nameToColor[lowerCaseName] !== undefined) {
+    const color = nameToColor[lowerCaseName]
+    return [EXACT, color.name, color.hex]
+  }
+
   const results = fuzzy.filter(
-    colorName,
+    lowerCaseName,
     namedColors,
     { extract: el => el.name }
   )
+  // Todo cross-reference with word usage data / prefer shorter names
 
   if (results[0] === undefined) {
     return [INVALID, colorName, '']
   }
 
-  // Todo return results array > map exact, approx into it
+  // Todo return results array
   const match = namedColors[results[0].index]
-  const matchType = match.name.toLowerCase() === colorName.toLowerCase() ? EXACT : APPROX
-  return [matchType, match.name, match.hex]
+  return [APPROX, match.name, match.hex]
 }
 
 function extractColors (ctx, imgPath) {
@@ -112,7 +111,7 @@ function extractColors (ctx, imgPath) {
 
   const extractedColors = Colibri.extractImageColors(img, 'css')
   for (let contentColor of extractedColors.content.slice(0, 6)) {
-    makeResponse(ctx, findColorMatch(Color(contentColor)))
+    makeResponse(ctx, findClosestColor(Color(contentColor)))
   }
 }
 
@@ -162,7 +161,7 @@ function makeImageResponse (ctx, result) {
 
 function generateSvg (colorHex, colorName) {
   const color = Color(colorHex)
-  const bgColor = colorToHex(getBgColor(color))
+  const bgColor = colorToHex(getBgColor(color).rgb().array())
 
   let draw = SVG(document.documentElement).size(850, 700)
   drawColorCircle(draw, colorHex, bgColor)
@@ -212,13 +211,13 @@ function drawRgbBars (draw, color) {
   })
 
   draw.rect(50, heights[0])
-    .fill(colorToHex(Color.rgb(rgb[0], 0, 0)))
+    .fill(colorToHex([rgb[0], 0, 0]))
     .move(550, 50)
   draw.rect(50, heights[1])
-    .fill(colorToHex(Color.rgb(0, rgb[1], 0)))
+    .fill(colorToHex([0, rgb[1], 0]))
     .move(650, 50)
   draw.rect(50, heights[2])
-    .fill(colorToHex(Color.rgb(0, 0, rgb[2])))
+    .fill(colorToHex([0, 0, rgb[2]]))
     .move(750, 50)
 
   return draw
@@ -227,12 +226,13 @@ function drawRgbBars (draw, color) {
 function drawHslBars (draw, color) {
   const height = 275
   const hsl = color.hsl().array()
-  const colorHex = colorToHex(color)
-  const grayscaleHex = colorToHex(color.desaturate(1))
+  const rgb = color.rgb().array()
+  const colorHex = colorToHex(rgb)
+  const grayscaleHex = colorToHex(color.desaturate(1).rgb().array())
 
   draw.rect(50, Math.round((hsl[0] / 360) * height))
     .fill(draw.gradient('linear', function (stop) {
-      stop.at(0, colorToHex(color.negate()))
+      stop.at(0, colorToHex(color.negate().rgb().array()))
       stop.at(1, colorHex)
     }).from(0, 0).to(0, 1))
     .move(550, 375)
@@ -252,9 +252,20 @@ function drawHslBars (draw, color) {
   return draw
 }
 
-function colorToHex (color) {
-  const [r, g, b] = color.rgb().array()
+function colorToHex (rgbArray) {
+  const [r, g, b] = rgbArray
   return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)
 }
 
-makeBot()
+if (require.main === module) {
+  makeBot()
+}
+
+exports.EXACT = EXACT
+exports.APPROX = APPROX
+exports.INVALID = INVALID
+exports.colorToHex = colorToHex
+exports.hexize = hexize
+exports.findClosestColor = findClosestColor
+exports.understandColor = understandColor
+exports.getBgColor = getBgColor
