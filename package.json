@@ -12,6 +12,7 @@
   },
   "scripts": {
     "dev": "nodemon hexabot.js",
+    "dev-test": "mocha --watch $(git diff --name-only | grep .js)",
     "test": "nyc mocha",
     "lint": "eslint hexabot.js"
   },
@@ -35,6 +36,7 @@
     "color-name-list": "git://github.com/qwhex/color-names.git#new-colors",
     "color-octree": "^2.1.2",
     "fuzzy": "^0.1.3",
+    "fuzzysearch": "^1.0.3",
     "isomorphic-fetch": "^2.2.1",
     "nearest-color": "^0.4.2",
     "pn": "^1.1.0",

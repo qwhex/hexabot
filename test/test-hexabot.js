@@ -48,7 +48,7 @@ describe('Color search', function () {
   }).timeout(10)
 
   it('Fuzzy search in color names', function () {
-    expect(hexa.searchByName('shrek')).to.deep.equal([hexa.APPROX, 'Sharegaki Persimmon', '#ffa26b'])
+    expect(hexa.searchByName('shrek')).to.deep.equal([hexa.APPROX, 'Shipwreck', '#968772'])
   }).timeout(100)
 
   it('Understand hexadecimal color strings', function () {
@@ -70,7 +70,7 @@ describe('Color search', function () {
   }).timeout(10)
 
   it('Understand approx color names', function () {
-    expect(hexa.understandColor('BLAC')).to.deep.equal([hexa.APPROX, 'Accursed Black', '#090807']) // Todo
+    expect(hexa.understandColor('BLAC')).to.deep.equal([hexa.APPROX, 'Black', '#000000'])
   }).timeout(100) // Todo slow
 })
 
@@ -78,11 +78,11 @@ describe('Generate colors', function () {
   it('Get background color', function () {
     expect(hexa.getBgColor(Color('#ffffff'))).to.deep.equal(Color('#000000'))
     expect(hexa.getBgColor(Color('#888888'))).to.deep.equal(Color('#000000'))
-    // Todo generate inverse
+    // Todo negated return
   }).timeout(10)
 })
 
-describe('image response', function () {
+describe('Image response', function () {
   const fgColorHex = '#ff6666'
   const mainColor = Color(fgColorHex)
   const bgColorHex = '#000000'

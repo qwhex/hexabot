@@ -1,7 +1,7 @@
 const Telegraf = require('telegraf')
 const Color = require('color')
 const namedColors = require('color-name-list')
-const fuzzy = require('fuzzy')
+const fuzzysearch = require('fuzzysearch')
 const window = require('svgdom')
 const SVG = require('svg.js')(window)
 const document = window.document
@@ -20,6 +20,8 @@ colorOctree.add(namedColors)
 
 let nameToColor = []
 namedColors.forEach(color => { nameToColor[color.name.toLowerCase()] = color })
+
+const sortedColorNames = Object.keys(nameToColor).sort((a, b) => Math.sign(a.length - b.length))
 
 const colorRegex = /^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/
 
@@ -82,27 +84,24 @@ function findClosestColor (color) {
   return [matchType, closestColor.name, closestColor.hex]
 }
 
-function searchByName (colorName) {
-  const lowerCaseName = colorName.toLowerCase() // Todo unidecode
-  if (nameToColor[lowerCaseName] !== undefined) {
-    const color = nameToColor[lowerCaseName]
-    return [EXACT, color.name, color.hex]
+function searchByName (query) {
+  const lowerCaseQuery = query.toLowerCase() // Todo unidecode
+
+  if (nameToColor[lowerCaseQuery] !== undefined) {
+    const match = nameToColor[lowerCaseQuery]
+    return [EXACT, match.name, match.hex]
   }
 
-  const results = fuzzy.filter(
-    lowerCaseName,
-    namedColors,
-    { extract: el => el.name }
-  )
-  // Todo cross-reference with word usage data / prefer shorter names
-
-  if (results[0] === undefined) {
-    return [INVALID, colorName, '']
+  for (const colorName of sortedColorNames) {
+    if (colorName.length < query.length) {
+      continue
+    }
+    if (fuzzysearch(lowerCaseQuery, colorName)) {
+      const match = nameToColor[colorName]
+      return [APPROX, match.name, match.hex]
+    }
   }
-
-  // Todo return results array
-  const match = namedColors[results[0].index]
-  return [APPROX, match.name, match.hex]
+  return [INVALID, query, '']
 }
 
 function extractColors (ctx, imgPath) {
@@ -117,7 +116,6 @@ function extractColors (ctx, imgPath) {
 
 function respond (ctx, result) {
   const [matchType, colorName, colorHex] = result
-
   const colorInfo = getInfoString(colorName, colorHex)
 
   switch (matchType) {

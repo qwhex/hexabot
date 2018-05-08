@@ -14,7 +14,7 @@ module.exports = {
       "error", {
         "min": 2,
         "max": 20,
-        "exceptions": ["i"]
+        "exceptions": ["i", "a", "b", "n"]
       }
     ],
     "array-bracket-newline": [
