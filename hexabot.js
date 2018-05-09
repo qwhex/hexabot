@@ -153,7 +153,7 @@ function respondWithImage (ctx, result) {
     })
   }
 
-  svg2png(generateSvg(colorHex, colorName))
+  svg2png(drawImage(colorHex, colorName).svg())
     .then(buffer => {
       pn.writeFile(imagePath, buffer)
         .then(() => ctx.replyWithPhoto({
@@ -167,16 +167,16 @@ function respondWithImage (ctx, result) {
     .catch(err => console.error(err))
 }
 
-function generateSvg (colorHex, colorName) {
+function drawImage (colorHex, colorName) {
   const mainColor = Color(colorHex)
   const bgColor = getBgColor(mainColor)
 
-  let draw = SVG(document.documentElement).size(850, 700)
-  drawColorCircle(draw.group(), colorHex, rgbToHex(bgColor.rgb().array()))
-  drawTitle(draw.group(), colorHex, colorName)
-  drawRgbBars(draw.group(), mainColor)
-  drawHslBars(draw.group(), mainColor)
-  return draw.svg()
+  let drawing = SVG(document.documentElement).size(850, 700)
+  drawColorCircle(drawing.group(), colorHex, rgbToHex(bgColor.rgb().array()))
+  drawTitle(drawing.group(), colorHex, colorName)
+  drawRgbBars(drawing.group(), mainColor)
+  drawHslBars(drawing.group(), mainColor)
+  return drawing
 }
 
 function getBgColor (color) {
@@ -288,3 +288,6 @@ exports.searchByName = searchByName
 exports.drawColorCircle = drawColorCircle
 exports.drawRgbBars = drawRgbBars
 exports.drawHslBars = drawHslBars
+exports.drawTitle = drawTitle
+exports.getInfoString = getInfoString
+exports.drawImage = drawImage

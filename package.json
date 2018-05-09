@@ -13,7 +13,10 @@
   "scripts": {
     "dev": "nodemon hexabot.js",
     "dev-test": "mocha --watch $(git diff --name-only | grep .js)",
-    "test": "nyc mocha",
+    "test": "mocha",
+    "cov": "nyc npm test",
+    "cov-html": "nyc --reporter=html npm test",
+    "cov-lcov": "nyc --reporter=text-lcov npm test",
     "lint": "eslint hexabot.js"
   },
   "keywords": [

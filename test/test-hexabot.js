@@ -72,17 +72,24 @@ describe('Color search', function () {
   it('Understand approx color names', function () {
     expect(hexa.understandColor('BLAC')).to.deep.equal([hexa.APPROX, 'Black', '#000000'])
   }).timeout(100) // Todo slow
+
+  it('Identify invalid color names', function () {
+    expect(hexa.understandColor('asdasdasd')).to.deep.equal([hexa.INVALID, 'asdasdasd', ''])
+  }).timeout(100)
 })
 
 describe('Generate colors', function () {
   it('Get background color', function () {
     expect(hexa.getBgColor(Color('#ffffff'))).to.deep.equal(Color('#000000'))
     expect(hexa.getBgColor(Color('#888888'))).to.deep.equal(Color('#000000'))
-    // Todo negated return
+    expect(hexa.getBgColor(Color('#45dcff'))).to.deep.equal(Color('#000000'))
+    expect(hexa.getBgColor(Color('#c22147'))).to.deep.equal(Color('#ffffff'))
+    expect(hexa.getBgColor(Color('#3a243b'))).to.deep.equal(Color('#c5dbc4'))
   }).timeout(10)
 })
 
 describe('Image response', function () {
+  const fgColorName = 'Pompelmo'
   const fgColorHex = '#ff6666'
   const mainColor = Color(fgColorHex)
   const bgColorHex = '#000000'
@@ -90,19 +97,42 @@ describe('Image response', function () {
 
   it('Draw color circle', function () {
     const group = hexa.drawColorCircle(draw.group(), fgColorHex, bgColorHex)
-    const nodeNames = group.children().map(crate => crate.node.nodeName)
+    const nodeNames = group.children().map(item => item.node.nodeName)
     expect(nodeNames).to.deep.equal(['rect', 'circle'])
   })
 
   it('Draw rgb bars', function () {
     const group = hexa.drawRgbBars(draw.group(), mainColor)
-    const nodeNames = group.children().map(crate => crate.node.nodeName)
+    const nodeNames = group.children().map(item => item.node.nodeName)
     expect(nodeNames).to.deep.equal(['rect', 'rect', 'rect'])
   })
 
   it('Draw hsl bars', function () {
     const group = hexa.drawHslBars(draw.group(), mainColor)
-    const nodeNames = group.children().map(crate => crate.node.nodeName)
+    const nodeNames = group.children().map(item => item.node.nodeName)
     expect(nodeNames).to.deep.equal(['rect', 'rect', 'rect'])
+  })
+
+  it('Draw title', function () {
+    const group = hexa.drawTitle(draw.group(), fgColorHex, fgColorName)
+    const nodeNames = group.children().map(item => item.node.nodeName)
+    expect(nodeNames).to.deep.equal(['text', 'text'])
+  })
+
+  it('Draw whole image', function () {
+    const drawing = hexa.drawImage(fgColorHex, fgColorName)
+    expect(drawing.attr('version')).to.equal(1.1)
+    // Expect('foobar').to.include('foo');
+  })
+})
+
+describe('Bot response', function () {
+  it('Get color info response', function () {
+    const color = Color('#000000')
+    const infoString = hexa.getInfoString(color)
+    const infoLines = infoString.split('\n')
+    for (const line of infoLines.slice(1)) {
+      expect(Color(line).rgb()).to.deep.equal(color.rgb())
+    }
   })
 })
