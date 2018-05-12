@@ -6,9 +6,9 @@ node_js:
   - "7"
   - "6"
 sudo: enabled
-script:
+before_install:
   - sudo ./deb_install.sh
-  - npm install
+script:
   - npm test
   - npm run lint
 notifications:
