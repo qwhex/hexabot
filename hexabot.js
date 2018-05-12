@@ -36,9 +36,7 @@ const EXACT = 0
 const APPROX = 1
 const INVALID = 2
 
-function makeBot () {
-  const bot = new Telegraf(TOKEN)
-
+function setUpBot (bot) {
   bot.use(async (ctx, next) => {
     await next()
     console.log(ctx.message)
@@ -147,31 +145,34 @@ function respondWithImage (ctx, result, caption) {
   const filename = `${colorHex}.png`
   const imagePath = path.resolve(__dirname, `./cache/${filename}`)
 
-  if (fs.existsSync(imagePath)) {
-    return ctx.telegram.sendPhoto(
-      ctx.message.chat.id,
-      {source: imagePath},
-      {
-        filename: filename,
-        caption: caption,
-        reply_to_message_id: ctx.message.message_id
-      })
-      .catch(err => logError(err))
+  if (existsInCache(imagePath)) {
+    return sendImage(ctx, imagePath, filename, caption)
   }
 
   svg2png(drawImage(colorHex, colorName).svg())
     .then(buffer => {
-      ctx.telegram.sendPhoto(
-        ctx.message.chat.id,
-        {source: buffer},
-        {
-          filename: filename,
-          caption: caption,
-          reply_to_message_id: ctx.message.message_id
-        })
-        .catch(err => logError(err))
+      sendImage(ctx, buffer, filename, caption)
       pn.writeFile(imagePath, buffer)
         .catch(err => logError(err))
+    })
+    .catch(err => logError(err))
+}
+
+function existsInCache (imagePath) {
+  return fs.existsSync(imagePath)
+}
+
+function sendImage (ctx, source, filename, caption) {
+  const chatId = ctx.message.chat.id
+  const messageId = ctx.message.message_id
+
+  return ctx.telegram.sendPhoto(
+    chatId,
+    {source: source},
+    {
+      filename: filename,
+      caption: caption,
+      reply_to_message_id: messageId
     })
     .catch(err => logError(err))
 }
@@ -282,7 +283,7 @@ function drawHslBars (group, mainColor) {
 // Router.get('/[0-9]+-[[\\w]]*', function)
 
 if (require.main === module) {
-  makeBot()
+  setUpBot(new Telegraf(TOKEN))
 }
 
 exports.EXACT = EXACT

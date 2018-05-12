@@ -18,24 +18,24 @@ describe('Color processing', function () {
     expect(hexa.hexize('asdasd')).to.equal('asdasd')
     expect(hexa.hexize('Blind Date')).to.equal('Blind Date')
     expect(hexa.hexize('yellow')).to.equal('yellow')
-  }).timeout(10)
+  }).timeout(20)
 })
 
 describe('Color search', function () {
   it('Find exact color', function () {
     expect(hexa.findClosestColor(Color('#0ff'))).to.deep.equal([hexa.EXACT, 'Aqua', '#00ffff'])
-  }).timeout(10)
+  }).timeout(20)
 
   it('Find closeset color', function () {
     expect(hexa.findClosestColor(Color('#01ffff'))).to.deep.equal([hexa.APPROX, 'Aqua', '#00ffff'])
-  }).timeout(10)
+  }).timeout(20)
 
   it('Find color by exact name', function () {
     expect(hexa.searchByName('Black')).to.deep.equal(exactBlack)
     expect(hexa.searchByName('BLACK')).to.deep.equal(exactBlack)
     expect(hexa.searchByName('black')).to.deep.equal(exactBlack)
     expect(hexa.searchByName('BlAcK')).to.deep.equal(exactBlack)
-  }).timeout(10)
+  }).timeout(20)
 
   it('Fuzzy search in color names', function () {
     expect(hexa.searchByName('shrek')).to.deep.equal([hexa.APPROX, 'Shipwreck', '#968772'])
@@ -47,7 +47,7 @@ describe('Color search', function () {
     expect(hexa.understandColor('#fff')).to.deep.equal(exactWhite)
     expect(hexa.understandColor('ffffff')).to.deep.equal(exactWhite)
     expect(hexa.understandColor('#ffffff')).to.deep.equal(exactWhite)
-  }).timeout(10)
+  }).timeout(20)
 
   // Todo rgb arrays
   // Todo match multiple
@@ -57,7 +57,7 @@ describe('Color search', function () {
     expect(hexa.understandColor('BLACK')).to.deep.equal(exactBlack)
     expect(hexa.understandColor('black')).to.deep.equal(exactBlack)
     expect(hexa.understandColor('BlAcK')).to.deep.equal(exactBlack)
-  }).timeout(10)
+  }).timeout(20)
 
   it('Understand approx color names', function () {
     expect(hexa.understandColor('BLAC')).to.deep.equal([hexa.APPROX, 'Black', '#000000'])
@@ -75,7 +75,7 @@ describe('Generate colors', function () {
     expect(hexa.getBgColor(Color('#45dcff'))).to.deep.equal(Color('#000000'))
     expect(hexa.getBgColor(Color('#c22147'))).to.deep.equal(Color('#ffffff'))
     expect(hexa.getBgColor(Color('#3a243b'))).to.deep.equal(Color('#c5dbc4'))
-  }).timeout(10)
+  }).timeout(20)
 })
 
 describe('Image response', function () {
@@ -89,31 +89,31 @@ describe('Image response', function () {
     const group = hexa.drawColorCircle(draw.group(), fgColorHex, bgColorHex)
     const nodeNames = group.children().map(item => item.node.nodeName)
     expect(nodeNames).to.deep.equal(['rect', 'circle'])
-  })
+  }).timeout(20)
 
   it('Draw rgb bars', function () {
     const group = hexa.drawRgbBars(draw.group(), mainColor)
     const nodeNames = group.children().map(item => item.node.nodeName)
     expect(nodeNames).to.deep.equal(['rect', 'rect', 'rect'])
-  })
+  }).timeout(20)
 
   it('Draw hsl bars', function () {
     const group = hexa.drawHslBars(draw.group(), mainColor)
     const nodeNames = group.children().map(item => item.node.nodeName)
     expect(nodeNames).to.deep.equal(['rect', 'rect', 'rect'])
-  })
+  }).timeout(20)
 
   it('Draw title', function () {
     const group = hexa.drawTitle(draw.group(), fgColorHex, fgColorName)
     const nodeNames = group.children().map(item => item.node.nodeName)
     expect(nodeNames).to.deep.equal(['text', 'text'])
-  })
+  }).timeout(1000)
 
   it('Draw whole image', function () {
     const drawing = hexa.drawImage(fgColorHex, fgColorName)
     expect(drawing.attr('version')).to.equal(1.1)
     // Expect('foobar').to.include('foo');
-  })
+  }).timeout(1000)
 })
 
 describe('Bot response', function () {
@@ -124,5 +124,5 @@ describe('Bot response', function () {
     for (const line of infoLines.slice(1)) {
       expect(Color(line).rgb()).to.deep.equal(color.rgb())
     }
-  })
+  }).timeout(10)
 })
