@@ -1,6 +1,8 @@
 # hexabot
 [Start talking with Hexabot](https://t.me/HexaBot)
 
+[![Build Status](https://travis-ci.org/qwhex/hexabot.svg?branch=master)](https://travis-ci.org/qwhex/hexabot)
+
 Hexabot helps you find colors by hex, rgb, hsl or name.
 Also, you can send a photo to her and she will extract the main colors from it.
 
