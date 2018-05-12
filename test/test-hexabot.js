@@ -10,16 +10,6 @@ const document = window.document
 const exactBlack = [hexa.EXACT, 'Black', '#000000']
 
 describe('Color processing', function () {
-  it('RGB to Hex conversion', function () {
-    const heiSeBlackHex = hexa.rgbToHex([20, 32, 48])
-    const greenHex = hexa.rgbToHex([0, 255, 0])
-    const blueHex = hexa.rgbToHex([0, 0, 255])
-
-    expect(heiSeBlackHex).to.equal('#142030')
-    expect(greenHex).to.equal('#00ff00')
-    expect(blueHex).to.equal('#0000ff')
-  }).timeout(10)
-
   it('Hex matching', function () {
     expect(hexa.hexize('#142030')).to.equal('142030')
     expect(hexa.hexize('142030')).to.equal('142030')
