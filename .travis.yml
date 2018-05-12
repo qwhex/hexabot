@@ -3,8 +3,6 @@ node_js:
   - "10"
   - "9"
   - "8"
-  - "7"
-  - "6"
 sudo: enabled
 before_install:
   - sudo ./deb_install.sh
