@@ -108,6 +108,7 @@ function processIncomingImage (ctx, thumbnailId) {
 }
 
 function extractColors (ctx, imgPath) {
+  // Todo use buffer directly
   let img = new Image()
   img.src = fs.readFileSync(imgPath)
 
@@ -231,25 +232,23 @@ function drawRgbBars (group, mainColor) {
   })
 
   group.rect(50, heights[0])
-    .fill(group.gradient('linear', function (stop) {
-      stop.at(0, '#000000')
-      stop.at(1, Color.rgb([rgb[0], 0, 0]).hex())
-    }).from(0, 0).to(0, 1))
+    .fill(makeSimpleGradient(group, [rgb[0], 0, 0]).from(0, 0).to(0, 1))
     .move(550, 50)
   group.rect(50, heights[1])
-    .fill(group.gradient('linear', function (stop) {
-      stop.at(0, '#000000')
-      stop.at(1, Color.rgb([0, rgb[1], 0]).hex())
-    }).from(0, 0).to(0, 1))
+    .fill(makeSimpleGradient(group, [0, rgb[1], 0]).from(0, 0).to(0, 1))
     .move(650, 50)
   group.rect(50, heights[2])
-    .fill(group.gradient('linear', function (stop) {
-      stop.at(0, '#000000')
-      stop.at(1, Color.rgb([0, 0, rgb[2]]).hex())
-    }).from(0, 0).to(0, 1))
+    .fill(makeSimpleGradient(group, [0, 0, rgb[2]]).from(0, 0).to(0, 1))
     .move(750, 50)
 
   return group
+}
+
+function makeSimpleGradient (group, targetRgbArray, startColor = '#000000') {
+  return group.gradient('linear', function (stop) {
+    stop.at(0, startColor)
+    stop.at(1, Color.rgb(targetRgbArray).hex())
+  })
 }
 
 function drawHslBars (group, mainColor) {
