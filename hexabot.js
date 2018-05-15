@@ -14,6 +14,7 @@ const Image = require('canvas').Image
 const fetch = require('isomorphic-fetch')
 const unidecode = require('unidecode')
 
+const CACHE_ENABLED = process.env.NODE_ENV === 'production'
 const TOKEN = process.env.HEXA_KEY
 
 let colorOctree = require('color-octree')
@@ -86,7 +87,7 @@ function searchByName (query) {
   }
 
   for (const colorName of sortedColorNames) {
-    if (colorName.length < query.length) {
+    if (colorName.length <= query.length) {
       continue
     }
     if (fuzzysearch(unidecodedQuery, colorName)) {
@@ -159,8 +160,8 @@ function respondWithImage (ctx, result, caption) {
     .catch(err => logError(err))
 }
 
-function existsInCache (imagePath) {
-  return fs.existsSync(imagePath)
+function existsInCache (imagePath, cacheEnabled = CACHE_ENABLED) {
+  return cacheEnabled ? fs.existsSync(imagePath) : false
 }
 
 function sendImage (ctx, source, filename, caption) {
@@ -231,23 +232,27 @@ function drawRgbBars (group, mainColor) {
     return Math.round((attribute / 255) * height)
   })
 
-  const {r, g, b} = [
-    [rgb[0], 0, 0],
-    [0, rgb[1], 0],
-    [0, 0, rgb[2]]
-  ].map(rgbArray => Color.rgb(rgbArray).hex())
+  const barColors = generateRgbBarColors(rgb)
 
   group.rect(50, heights[0])
-    .fill(makeSimpleGradient(group, '#000000', r))
+    .fill(makeSimpleGradient(group, '#000000', barColors[0]))
     .move(550, 50)
   group.rect(50, heights[1])
-    .fill(makeSimpleGradient(group, '#000000', g))
+    .fill(makeSimpleGradient(group, '#000000', barColors[1]))
     .move(650, 50)
   group.rect(50, heights[2])
-    .fill(makeSimpleGradient(group, '#000000', b))
+    .fill(makeSimpleGradient(group, '#000000', barColors[2]))
     .move(750, 50)
 
   return group
+}
+
+function generateRgbBarColors (rgbArray) {
+  return [0, 1, 2].map(rgbPosition => {
+    let barColor = [0, 0, 0]
+    barColor[rgbPosition] = rgbArray[rgbPosition]
+    return Color.rgb(barColor).hex()
+  })
 }
 
 function drawHslBars (group, mainColor) {
@@ -270,7 +275,7 @@ function drawHslBars (group, mainColor) {
 }
 
 function makeSimpleGradient (group, startColorHex, stopColorHex) {
-  return group.gradient('linear', function (stop) {
+  return group.gradient('linear', stop => {
     stop.at(0, startColorHex)
     stop.at(1, stopColorHex)
   }).from(0, 0).to(0, 1)
@@ -294,3 +299,4 @@ exports.drawHslBars = drawHslBars
 exports.drawTitle = drawTitle
 exports.getInfoString = getInfoString
 exports.drawImage = drawImage
+exports.generateRgbBarColors = generateRgbBarColors

@@ -28,7 +28,7 @@ describe('Color search', function () {
 
   it('Find closeset color', function () {
     expect(hexa.findClosestColor(Color('#01ffff'))).to.deep.equal([hexa.APPROX, 'Aqua', '#00ffff'])
-  }).timeout(20)
+  }).timeout(25)
 
   it('Find color by exact name', function () {
     expect(hexa.searchByName('Black')).to.deep.equal(exactBlack)
@@ -69,13 +69,19 @@ describe('Color search', function () {
 })
 
 describe('Generate colors', function () {
-  it('Get background color', function () {
+  it('Select appropriate background color', function () {
     expect(hexa.getBgColor(Color('#ffffff'))).to.deep.equal(Color('#000000'))
     expect(hexa.getBgColor(Color('#888888'))).to.deep.equal(Color('#000000'))
     expect(hexa.getBgColor(Color('#45dcff'))).to.deep.equal(Color('#000000'))
     expect(hexa.getBgColor(Color('#c22147'))).to.deep.equal(Color('#ffffff'))
     expect(hexa.getBgColor(Color('#3a243b'))).to.deep.equal(Color('#c5dbc4'))
-  }).timeout(20)
+  }).timeout(25)
+
+  it('Generate the end color of rgb bar gradients', function () {
+    expect(hexa.generateRgbBarColors(Color('#c22147').rgb().array())).to.deep.equal(
+      ['#C20000', '#002100', '#000047']
+    )
+  })
 })
 
 describe('Image response', function () {
