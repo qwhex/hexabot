@@ -231,24 +231,23 @@ function drawRgbBars (group, mainColor) {
     return Math.round((attribute / 255) * height)
   })
 
+  const {r, g, b} = [
+    [rgb[0], 0, 0],
+    [0, rgb[1], 0],
+    [0, 0, rgb[2]]
+  ].map(rgbArray => Color.rgb(rgbArray).hex())
+
   group.rect(50, heights[0])
-    .fill(makeSimpleGradient(group, [rgb[0], 0, 0]).from(0, 0).to(0, 1))
+    .fill(makeSimpleGradient(group, '#000000', r))
     .move(550, 50)
   group.rect(50, heights[1])
-    .fill(makeSimpleGradient(group, [0, rgb[1], 0]).from(0, 0).to(0, 1))
+    .fill(makeSimpleGradient(group, '#000000', g))
     .move(650, 50)
   group.rect(50, heights[2])
-    .fill(makeSimpleGradient(group, [0, 0, rgb[2]]).from(0, 0).to(0, 1))
+    .fill(makeSimpleGradient(group, '#000000', b))
     .move(750, 50)
 
   return group
-}
-
-function makeSimpleGradient (group, targetRgbArray, startColor = '#000000') {
-  return group.gradient('linear', function (stop) {
-    stop.at(0, startColor)
-    stop.at(1, Color.rgb(targetRgbArray).hex())
-  })
 }
 
 function drawHslBars (group, mainColor) {
@@ -258,28 +257,24 @@ function drawHslBars (group, mainColor) {
   const grayscaleHex = mainColor.desaturate(1).hex()
 
   group.rect(50, Math.round((hsl[0] / 360) * height))
-    .fill(group.gradient('linear', function (stop) {
-      stop.at(0, mainColor.negate().hex())
-      stop.at(1, colorHex)
-    }).from(0, 0).to(0, 1))
+    .fill(makeSimpleGradient(group, mainColor.negate().hex(), colorHex))
     .move(550, 375)
   group.rect(50, Math.round((hsl[1] / 100) * height))
-    .fill(group.gradient('linear', function (stop) {
-      stop.at(0, grayscaleHex)
-      stop.at(1, colorHex)
-    }).from(0, 0).to(0, 1))
+    .fill(makeSimpleGradient(group, grayscaleHex, colorHex))
     .move(650, 375)
   group.rect(50, Math.round((hsl[2] / 100) * height))
-    .fill(group.gradient('linear', function (stop) {
-      stop.at(0, '#000')
-      stop.at(1, grayscaleHex)
-    }).from(0, 0).to(0, 1))
+    .fill(makeSimpleGradient(group, '#000000', grayscaleHex))
     .move(750, 375)
 
   return group
 }
 
-// Router.get('/[0-9]+-[[\\w]]*', function)
+function makeSimpleGradient (group, startColorHex, stopColorHex) {
+  return group.gradient('linear', function (stop) {
+    stop.at(0, startColorHex)
+    stop.at(1, stopColorHex)
+  }).from(0, 0).to(0, 1)
+}
 
 if (require.main === module) {
   setUpBot(new Telegraf(TOKEN))
