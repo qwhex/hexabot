@@ -19,7 +19,7 @@ let colorOctree = require('color-octree') // Todo ktree
 colorOctree.add(namedColors)
 
 const nameToColor = (() => {
-  let nameToColor = []
+  let nameToColor = Object.create(null)
   namedColors.forEach(color => {
     const unidecodedName = unidecode(color.name).toLowerCase()
     nameToColor[unidecodedName] = color
@@ -43,6 +43,8 @@ function setUpBot (bot) {
 
   bot.catch(err => logError(err))
 
+  bot.start(ctx => ctx.reply(getWelcomeMessage()))
+
   bot.on('text', ctx => {
     const query = ctx.message.text
     respond(ctx, understandColor(query))
@@ -55,6 +57,20 @@ function setUpBot (bot) {
 
   bot.startPolling()
   return bot
+}
+
+function getWelcomeMessage () {
+  return `Hi 🖖
+
+Start by sending a...
+
+    color code, like #fff, #ffffff, fff, rgb(...)
+    color name, like Berta Blue or Garfield
+    or a picture (I will extract the colors)
+
+Source code: https://github.com/qwhex/hexabot/
+
+Have fun!`
 }
 
 function understandColor (colorString) {
