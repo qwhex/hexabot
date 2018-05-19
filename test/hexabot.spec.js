@@ -1,11 +1,8 @@
 /* eslint-env node, mocha */
 
 const expect = require('chai').expect
-const hexa = require('../hexabot')
 const Color = require('color')
-const window = require('svgdom')
-const SVG = require('svg.js')(window)
-const document = window.document
+const hexa = require('../hexabot')
 
 const exactBlack = [hexa.EXACT, 'Black', '#000000']
 
@@ -24,7 +21,7 @@ describe('Color processing', function () {
 describe('Color search', function () {
   it('Find exact color', function () {
     expect(hexa.findClosestColor(Color('#0ff'))).to.deep.equal([hexa.EXACT, 'Aqua', '#00ffff'])
-  }).timeout(20)
+  }).timeout(25)
 
   it('Find closeset color', function () {
     expect(hexa.findClosestColor(Color('#01ffff'))).to.deep.equal([hexa.APPROX, 'Aqua', '#00ffff'])
@@ -68,66 +65,6 @@ describe('Color search', function () {
   }).timeout(100)
 })
 
-describe('Generate colors', function () {
-  it('Select appropriate background color', function () {
-    expect(hexa.getBgColor(Color('#ffffff'))).to.deep.equal(Color('#000000'))
-    expect(hexa.getBgColor(Color('#888888'))).to.deep.equal(Color('#000000'))
-    expect(hexa.getBgColor(Color('#45dcff'))).to.deep.equal(Color('#000000'))
-    expect(hexa.getBgColor(Color('#c22147'))).to.deep.equal(Color('#ffffff'))
-    expect(hexa.getBgColor(Color('#3a243b'))).to.deep.equal(Color('#c5dbc4'))
-  }).timeout(50)
-
-  it('Generate the end color of rgb bar gradients', function () {
-    expect(hexa.generateRgbBarColors(Color('#c22147').rgb().array())).to.deep.equal(
-      ['#C20000', '#002100', '#000047']
-    )
-  })
-})
-
-describe('Image response', function () {
-  const fgColorName = 'Pompelmo'
-  const fgColorHex = '#ff6666'
-  const mainColor = Color(fgColorHex)
-  const bgColorHex = '#000000'
-  let draw = SVG(document.documentElement).size(850, 700) // Todo constants
-
-  it('Draw color circle', function () {
-    const group = hexa.drawColorCircle(draw.group(), fgColorHex, bgColorHex)
-    const nodeNames = group.children().map(item => item.node.nodeName)
-    expect(nodeNames).to.deep.equal(['rect', 'circle'])
-  }).timeout(20)
-
-  it('Draw rgb bars', function () {
-    const group = hexa.drawRgbBars(draw.group(), mainColor)
-    const nodeNames = group.children().map(item => item.node.nodeName)
-    expect(nodeNames).to.deep.equal(['rect', 'rect', 'rect'])
-  }).timeout(20)
-
-  it('Draw hsl bars', function () {
-    const group = hexa.drawHslBars(draw.group(), mainColor)
-    const nodeNames = group.children().map(item => item.node.nodeName)
-    expect(nodeNames).to.deep.equal(['rect', 'rect', 'rect'])
-  }).timeout(20)
-
-  it('Draw title', function () {
-    const group = hexa.drawTitle(draw.group(), fgColorHex, fgColorName)
-    const nodeNames = group.children().map(item => item.node.nodeName)
-    expect(nodeNames).to.deep.equal(['text', 'text'])
-  }).timeout(1000)
-
-  it('Draw whole image', function () {
-    const drawing = hexa.drawImage(fgColorHex, fgColorName)
-    expect(drawing.attr('version')).to.equal(1.1)
-    // Expect('foobar').to.include('foo');
-  }).timeout(1000)
-
-  it('Check if exists in cache', function () {
-    expect(hexa.existsInCache('cache/#123457.png', false)).to.equal(false)
-    expect(hexa.existsInCache('cache/#123457.png', true)).to.equal(false)
-    expect(hexa.existsInCache('cache/#45dcff.png', true)).to.equal(true)
-  }).timeout(20)
-})
-
 describe('Bot response', function () {
   it('Get color info response', function () {
     const color = Color('#000000')
@@ -137,4 +74,12 @@ describe('Bot response', function () {
       expect(Color(line).rgb()).to.deep.equal(color.rgb())
     }
   }).timeout(10)
+})
+
+describe('I/O', function () {
+  it('Check if image exists in cache', function () {
+    expect(hexa.existsInCache('cache/#123457.png', false)).to.equal(false)
+    expect(hexa.existsInCache('cache/#123457.png', true)).to.equal(false)
+    expect(hexa.existsInCache('cache/#45dcff.png', true)).to.equal(true)
+  }).timeout(20)
 })
