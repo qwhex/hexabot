@@ -17,7 +17,7 @@ const unidecode = require('unidecode')
 const CACHE_ENABLED = process.env.NODE_ENV === 'production'
 const TOKEN = process.env.HEXA_KEY
 
-let colorOctree = require('color-octree')
+let colorOctree = require('color-octree') // Todo ktree
 colorOctree.add(namedColors)
 
 const nameToColor = (() => {
@@ -300,3 +300,4 @@ exports.drawTitle = drawTitle
 exports.getInfoString = getInfoString
 exports.drawImage = drawImage
 exports.generateRgbBarColors = generateRgbBarColors
+exports.existsInCache = existsInCache

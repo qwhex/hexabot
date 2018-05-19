@@ -75,7 +75,7 @@ describe('Generate colors', function () {
     expect(hexa.getBgColor(Color('#45dcff'))).to.deep.equal(Color('#000000'))
     expect(hexa.getBgColor(Color('#c22147'))).to.deep.equal(Color('#ffffff'))
     expect(hexa.getBgColor(Color('#3a243b'))).to.deep.equal(Color('#c5dbc4'))
-  }).timeout(25)
+  }).timeout(50)
 
   it('Generate the end color of rgb bar gradients', function () {
     expect(hexa.generateRgbBarColors(Color('#c22147').rgb().array())).to.deep.equal(
@@ -120,6 +120,12 @@ describe('Image response', function () {
     expect(drawing.attr('version')).to.equal(1.1)
     // Expect('foobar').to.include('foo');
   }).timeout(1000)
+
+  it('Check if exists in cache', function () {
+    expect(hexa.existsInCache('cache/#123457.png', false)).to.equal(false)
+    expect(hexa.existsInCache('cache/#123457.png', true)).to.equal(false)
+    expect(hexa.existsInCache('cache/#45dcff.png', true)).to.equal(true)
+  }).timeout(20)
 })
 
 describe('Bot response', function () {
