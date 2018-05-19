@@ -17,9 +17,6 @@ module.exports = {
         "exceptions": ["i", "a", "n", "r", "g", "b"]
       }
     ],
-    "array-bracket-newline": [
-      "error", "consistent"
-    ],
     "array-bracket-spacing": [
       "error", "never"
     ],
