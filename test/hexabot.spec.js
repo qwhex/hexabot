@@ -8,10 +8,10 @@ const exactBlack = [hexa.EXACT, 'Black', '#000000']
 
 describe('Color processing', function () {
   it('Hex matching', function () {
-    expect(hexa.hexize('#142030')).to.equal('142030')
-    expect(hexa.hexize('142030')).to.equal('142030')
-    expect(hexa.hexize('#0f0')).to.equal('0f0')
-    expect(hexa.hexize('0f0')).to.equal('0f0')
+    expect(hexa.hexize('#142030')).to.equal('#142030')
+    expect(hexa.hexize('142030')).to.equal('#142030')
+    expect(hexa.hexize('#0f0')).to.equal('#0f0')
+    expect(hexa.hexize('0f0')).to.equal('#0f0')
     expect(hexa.hexize('asdasd')).to.equal('asdasd')
     expect(hexa.hexize('Blind Date')).to.equal('Blind Date')
     expect(hexa.hexize('yellow')).to.equal('yellow')
@@ -61,7 +61,7 @@ describe('Color search', function () {
   }).timeout(100) // Todo slow
 
   it('Identify invalid color names', function () {
-    expect(hexa.understandColor('asdasdasd')).to.deep.equal([hexa.INVALID, 'asdasdasd', ''])
+    expect(hexa.understandColor('asdasdasd')).to.deep.equal([2, 'asdasdasd not found', ''])
   }).timeout(100)
 })
 

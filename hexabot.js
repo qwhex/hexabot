@@ -51,8 +51,10 @@ function setUpBot (bot) {
   bot.start(ctx => ctx.reply(getWelcomeMessage()))
 
   bot.on('text', ctx => {
+    ctx.telegram.sendChatAction(ctx.message.chat.id, 'typing')
     const query = ctx.message.text
-    respond(ctx, understandColor(query))
+    const result = understandColor(query)
+    respond(ctx, result)
   })
 
   bot.on('photo', ctx => {
@@ -80,8 +82,8 @@ Have fun!`
 
 function understandColor (colorString) {
   try {
-    return findClosestColor(Color('#' + hexize(colorString)))
-  } catch (error) {
+    return findClosestColor(Color(hexize(colorString)))
+  } catch (exception) {
     const results = getColorsByName(colorString)
     return results.next().value
   }
@@ -89,7 +91,7 @@ function understandColor (colorString) {
 
 function hexize (possibleHex) {
   const matches = possibleHex.match(colorRegex)
-  return matches !== null ? matches[1] : possibleHex
+  return matches !== null ? '#' + matches[1] : possibleHex
 }
 
 function findClosestColor (color) {
@@ -101,25 +103,37 @@ function findClosestColor (color) {
 function * getColorsByName (query) {
   const slugQuery = slugify(query)
 
-  if (nameToColor[slugQuery] !== undefined) {
-    const match = nameToColor[slugQuery]
-    yield [EXACT, match.name, match.hex]
+  try {
+    return findExactColorName(slugQuery)
+  } catch (exception) {
+    yield * fuzzyColorNames(slugQuery)
   }
 
-  for (const colorName of sortedColorNames) {
-    if (colorName.length <= query.length) {
-      continue
-    }
-    if (fuzzysearch(slugQuery, colorName)) {
-      const match = nameToColor[colorName]
-      yield [APPROX, match.name, match.hex]
-    }
-  }
-  return [INVALID, query, '']
+  return [INVALID, `${slugQuery} not found`, '']
 }
 
 function slugify (string) {
   return unidecode(string).toLowerCase()
+}
+
+function findExactColorName (colorNameQuery) {
+  if (nameToColor[colorNameQuery] !== undefined) {
+    const match = nameToColor[colorNameQuery]
+    return [EXACT, match.name, match.hex]
+  }
+  throw new Error(`${colorNameQuery} not found`)
+}
+
+function * fuzzyColorNames (colorNameQuery) {
+  for (const colorName of sortedColorNames) {
+    if (colorName.length <= colorNameQuery.length) {
+      continue
+    }
+    if (fuzzysearch(colorNameQuery, colorName)) {
+      const match = nameToColor[colorName]
+      yield [APPROX, match.name, match.hex]
+    }
+  }
 }
 
 function processIncomingImage (ctx, thumbnailId) {
@@ -152,11 +166,8 @@ function respond (ctx, result) {
     return respondWithImage(ctx, result, `${colorInfo}`)
   case APPROX:
     return respondWithImage(ctx, result, `Closest match:\n\n${colorInfo}`)
-  case INVALID:
-    return ctx.reply(`🤷  ${colorName} ${colorHex}  🤷`)
-  default:
-    return ctx.reply(`wtf`)
   }
+  ctx.reply(`🤷 ${colorName} 🤷`)
 }
 
 function getInfoString (colorName, colorHex) {
