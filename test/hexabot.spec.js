@@ -28,14 +28,14 @@ describe('Color search', function () {
   }).timeout(25)
 
   it('Find color by exact name', function () {
-    expect(hexa.searchByName('Black')).to.deep.equal(exactBlack)
-    expect(hexa.searchByName('BLACK')).to.deep.equal(exactBlack)
-    expect(hexa.searchByName('black')).to.deep.equal(exactBlack)
-    expect(hexa.searchByName('BlAcK')).to.deep.equal(exactBlack)
+    expect(hexa.getColorsByName('Black').next().value).to.deep.equal(exactBlack)
+    expect(hexa.getColorsByName('BLACK').next().value).to.deep.equal(exactBlack)
+    expect(hexa.getColorsByName('black').next().value).to.deep.equal(exactBlack)
+    expect(hexa.getColorsByName('BlAcK').next().value).to.deep.equal(exactBlack)
   }).timeout(20)
 
   it('Fuzzy search in color names', function () {
-    expect(hexa.searchByName('shrek')).to.deep.equal([hexa.APPROX, 'Shipwreck', '#968772'])
+    expect(hexa.getColorsByName('shrek').next().value).to.deep.equal([hexa.APPROX, 'Shipwreck', '#968772'])
   }).timeout(100)
 
   it('Understand hexadecimal color strings', function () {
@@ -73,7 +73,7 @@ describe('Bot response', function () {
     for (const line of infoLines.slice(1)) {
       expect(Color(line).rgb()).to.deep.equal(color.rgb())
     }
-  }).timeout(10)
+  }).timeout(20)
 })
 
 describe('I/O', function () {

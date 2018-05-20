@@ -18,22 +18,27 @@ const TOKEN = process.env.HEXA_KEY
 let colorOctree = require('color-octree') // Todo ktree
 colorOctree.add(namedColors)
 
-const nameToColor = (() => {
-  let nameToColor = Object.create(null)
-  namedColors.forEach(color => {
-    const unidecodedName = unidecode(color.name).toLowerCase()
-    nameToColor[unidecodedName] = color
-  })
-  return nameToColor
-})()
-
-const sortedColorNames = Object.keys(nameToColor).sort((a, b) => Math.sign(a.length - b.length))
-
 const colorRegex = /^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/
 
+// Response types
 const EXACT = 0
 const APPROX = 1
 const INVALID = 2
+
+const nameToColor = getNameToColor(namedColors)
+const sortedColorNames = getSortedColorNames(nameToColor)
+
+function getNameToColor (namedColors) {
+  let nameToColor = Object.create(null)
+  namedColors.forEach(color => {
+    nameToColor[slugify(color.name)] = color
+  })
+  return nameToColor
+}
+
+function getSortedColorNames (nameToColor) {
+  return Object.keys(nameToColor).sort((a, b) => Math.sign(a.length - b.length))
+}
 
 function setUpBot (bot) {
   bot.use(async (ctx, next) => {
@@ -77,7 +82,8 @@ function understandColor (colorString) {
   try {
     return findClosestColor(Color('#' + hexize(colorString)))
   } catch (error) {
-    return searchByName(colorString)
+    const results = getColorsByName(colorString)
+    return results.next().value
   }
 }
 
@@ -92,24 +98,28 @@ function findClosestColor (color) {
   return [matchType, closestColor.name, closestColor.hex]
 }
 
-function searchByName (query) {
-  const unidecodedQuery = unidecode(query).toLowerCase()
+function * getColorsByName (query) {
+  const slugQuery = slugify(query)
 
-  if (nameToColor[unidecodedQuery] !== undefined) {
-    const match = nameToColor[unidecodedQuery]
-    return [EXACT, match.name, match.hex]
+  if (nameToColor[slugQuery] !== undefined) {
+    const match = nameToColor[slugQuery]
+    yield [EXACT, match.name, match.hex]
   }
 
   for (const colorName of sortedColorNames) {
     if (colorName.length <= query.length) {
       continue
     }
-    if (fuzzysearch(unidecodedQuery, colorName)) {
+    if (fuzzysearch(slugQuery, colorName)) {
       const match = nameToColor[colorName]
-      return [APPROX, match.name, match.hex]
+      yield [APPROX, match.name, match.hex]
     }
   }
   return [INVALID, query, '']
+}
+
+function slugify (string) {
+  return unidecode(string).toLowerCase()
 }
 
 function processIncomingImage (ctx, thumbnailId) {
@@ -201,12 +211,17 @@ if (require.main === module) {
   setUpBot(new Telegraf(TOKEN))
 }
 
-exports.EXACT = EXACT
-exports.APPROX = APPROX
-exports.INVALID = INVALID
-exports.hexize = hexize
-exports.findClosestColor = findClosestColor
-exports.understandColor = understandColor
-exports.searchByName = searchByName
-exports.getInfoString = getInfoString
-exports.existsInCache = existsInCache
+module.exports = {
+  EXACT,
+  APPROX,
+  INVALID,
+  hexize,
+  findClosestColor,
+  understandColor,
+  getColorsByName,
+  getInfoString,
+  existsInCache,
+  getNameToColor,
+  sortedColorNames,
+  getWelcomeMessage
+}
