@@ -26,7 +26,7 @@ const APPROX = 1
 const INVALID = 2
 
 const nameToColor = getNameToColor(namedColors)
-const sortedColorNames = getSortedColorNames(nameToColor)
+const sortedColorNames = sortByLength(nameToColor)
 
 function getNameToColor (namedColors) {
   let nameToColor = Object.create(null)
@@ -36,7 +36,7 @@ function getNameToColor (namedColors) {
   return nameToColor
 }
 
-function getSortedColorNames (nameToColor) {
+function sortByLength (nameToColor) {
   return Object.keys(nameToColor).sort((a, b) => Math.sign(a.length - b.length))
 }
 
@@ -51,19 +51,23 @@ function setUpBot (bot) {
   bot.start(ctx => ctx.reply(getWelcomeMessage()))
 
   bot.on('text', ctx => {
-    ctx.telegram.sendChatAction(ctx.message.chat.id, 'typing')
+    sendTypingStatus(ctx)
     const query = ctx.message.text
     const result = understandColor(query)
     respond(ctx, result)
   })
 
   bot.on('photo', ctx => {
+    sendTypingStatus(ctx)
     const thumbnailId = ctx.message.photo[0].file_id
     processIncomingImage(ctx, thumbnailId)
   })
 
-  bot.startPolling()
   return bot
+}
+
+function sendTypingStatus (ctx) {
+  ctx.telegram.sendChatAction(ctx.message.chat.id, 'typing')
 }
 
 function getWelcomeMessage () {
@@ -72,7 +76,7 @@ function getWelcomeMessage () {
 Start by sending a...
 
     color code, like #fff, #ffffff, fff, rgb(...)
-    color name, like Berta Blue or Garfield
+    color name, like Berta Blue, Void or Garfield
     or a picture (I will extract the colors)
 
 Source code: https://github.com/qwhex/hexabot/
@@ -141,19 +145,23 @@ function processIncomingImage (ctx, thumbnailId) {
   ctx.telegram.getFileLink(thumbnailId).then(thumbnailUrl => {
     fetch(thumbnailUrl).then(image => image.body
       .pipe(fs.createWriteStream(imgSavePath))
-      .on('close', () => extractColors(ctx, imgSavePath))
+      .on('close', () => {
+        for (const contentColor of extractColors(imgSavePath)) {
+          respond(ctx, findClosestColor(Color(contentColor)))
+        }
+      })
     )
   })
 }
 
-function extractColors (ctx, imgPath) {
+function * extractColors (imgPath) {
   // Todo use buffer directly
   let img = new Image()
   img.src = fs.readFileSync(imgPath)
 
   const extractedColors = Colibri.extractImageColors(img, 'css')
-  for (let contentColor of extractedColors.content.slice(0, 6)) {
-    respond(ctx, findClosestColor(Color(contentColor)))
+  for (const contentColor of extractedColors.content) {
+    yield contentColor
   }
 }
 
@@ -218,8 +226,13 @@ function logError (error) {
   console.error(error)
 }
 
+function main () {
+  let bot = setUpBot(new Telegraf(TOKEN))
+  bot.startPolling()
+}
+
 if (require.main === module) {
-  setUpBot(new Telegraf(TOKEN))
+  main()
 }
 
 module.exports = {
@@ -233,6 +246,8 @@ module.exports = {
   getInfoString,
   existsInCache,
   getNameToColor,
-  sortedColorNames,
-  getWelcomeMessage
+  sortByLength,
+  getWelcomeMessage,
+  extractColors,
+  setUpBot
 }
