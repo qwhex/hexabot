@@ -6,9 +6,13 @@ node_js:
 sudo: enabled
 before_install:
   - sudo ./debian_install.sh
+install:
+  - npm install -g codecov
 script:
   - npm test
   - npm run lint
+  - istanbul cover ./node_modules/mocha/bin/_mocha --reporter lcovonly -- -R spec
+  - codecov
 notifications:
   email:
     recipients:
