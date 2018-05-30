@@ -7,6 +7,7 @@ sudo: enabled
 before_install:
   - sudo ./debian_install.sh
 install:
+  - npm install
   - npm install -g codecov
 script:
   - npm test
