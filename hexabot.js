@@ -41,13 +41,7 @@ function sortByLength (nameToColor) {
 }
 
 function setUpBot (bot) {
-  bot.use(async (ctx, next) => {
-    await next()
-    console.log(ctx.message)
-  })
-
   bot.catch(err => logError(err))
-
   bot.start(ctx => ctx.reply(getWelcomeMessage()))
 
   bot.on('text', ctx => {
