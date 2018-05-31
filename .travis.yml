@@ -8,7 +8,7 @@ before_install:
   - sudo ./debian_install.sh
 install:
   - npm install
-  - npm install -g codecov
+  - npm install -g codecov istanbul
 script:
   - npm test
   - npm run lint
