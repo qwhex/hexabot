@@ -5,7 +5,7 @@ const Color = require('color')
 const window = require('svgdom')
 const document = window.document
 const SVG = require('svg.js')(window)
-const render = require('../render')
+const render = require('../src/render')
 
 describe('Image response', function () {
   const fgColorName = 'Pompelmo'
