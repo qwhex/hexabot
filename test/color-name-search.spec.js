@@ -1,10 +1,17 @@
 /* eslint-env node, mocha */
 
 const expect = require('chai').expect
-const Color = require('color')
 const search = require('../src/color-name-search')
 
-const exactBlack = [search.EXACT, 'Black', '#000000']
+const exactBlack = toColorObj([search.EXACT, 'Black', '#000000'])
+
+function toColorObj (colorList) {
+  return {
+    matchType: colorList[0],
+    name: colorList[1],
+    hex: colorList[2]
+  }
+}
 
 describe('Data setup', function () {
   it('should generate a nameToColor hashtable', function () {
@@ -40,11 +47,11 @@ describe('Color Processing', function () {
 
 describe('Color Search', function () {
   it('should find exact color by hex', function () {
-    expect(search.findClosest('#0ff')).to.deep.equal([search.EXACT, 'Aqua', '#00ffff'])
+    expect(search.findClosest('#0ff')).to.deep.equal(toColorObj([search.EXACT, 'Aqua', '#00ffff']))
   }).timeout(25)
 
   it('should find closeset color by hex', function () {
-    expect(search.findClosest('#01ffff')).to.deep.equal([search.APPROX, 'Aqua', '#00ffff'])
+    expect(search.findClosest('#01ffff')).to.deep.equal(toColorObj([search.APPROX, 'Aqua', '#00ffff']))
   }).timeout(25)
 
   it('should find exact color by name', function () {
@@ -55,11 +62,18 @@ describe('Color Search', function () {
   }).timeout(20)
 
   it('should fuzzy search in color names', function () {
-    expect(search.searchByName('shrek').next().value).to.deep.equal([search.APPROX, 'Shipwreck', '#968772'])
+    expect(search.searchByName('shrek').next().value).to.deep.equal(
+      {
+        'hex': '#968772',
+        'matchIndexes': [0, 1, 5, 6, 8],
+        'matchType': search.APPROX,
+        'name': 'Shipwreck'
+      }
+    )
   }).timeout(100)
 
   it('should understand hexadecimal color strings', function () {
-    const exactWhite = [search.EXACT, 'White', '#ffffff']
+    const exactWhite = toColorObj([search.EXACT, 'White', '#ffffff'])
     expect(search.search('fff').next().value).to.deep.equal(exactWhite)
     expect(search.search('#fff').next().value).to.deep.equal(exactWhite)
     expect(search.search('ffffff').next().value).to.deep.equal(exactWhite)
@@ -77,10 +91,17 @@ describe('Color Search', function () {
   }).timeout(20)
 
   it('should understand approx color names', function () {
-    expect(search.search('BLAC').next().value).to.deep.equal([search.APPROX, 'Black', '#000000'])
+    expect(search.search('BLAC').next().value).to.deep.equal(
+      {
+        'hex': '#000000',
+        'matchIndexes': [0, 1, 2, 3],
+        'matchType': search.APPROX,
+        'name': 'Black'
+      }
+    )
   }).timeout(50)
 
   it('should identify invalid color names', function () {
-    expect(search.search('asdasdasd').next().value).to.deep.equal([search.INVALID, 'asdasdasd not found', ''])
+    expect(search.search('asdasdasd').next().value).to.equal(undefined)
   }).timeout(75)
 })

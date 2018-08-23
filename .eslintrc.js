@@ -14,7 +14,7 @@ module.exports = {
       "error", {
         "min": 2,
         "max": 20,
-        "exceptions": ["i", "a", "n", "r", "g", "b"]
+        "exceptions": ["i", "a", "n", "r", "g", "b", "j"]
       }
     ],
     "array-bracket-spacing": [
@@ -40,6 +40,7 @@ module.exports = {
         "before": false
       }
     ],
+    "no-labels": "off",
     "indent": ["error", 2]
   }
 };

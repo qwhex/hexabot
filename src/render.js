@@ -5,7 +5,7 @@ const SVG = require('svg.js')(window)
 
 function drawImage (fgColorHex, colorName) {
   const mainColor = Color(fgColorHex)
-  const bgColor = getBgColor(mainColor)
+  const bgColor = getBgColor(fgColorHex)
 
   let drawing = SVG(document.documentElement).size(850, 700)
   drawColorCircle(drawing.group(), fgColorHex, bgColor.hex())
@@ -15,12 +15,13 @@ function drawImage (fgColorHex, colorName) {
   return drawing
 }
 
-function getBgColor (color) {
-  const negatedColor = color.negate()
-  if (color.contrast(negatedColor) >= 5) {
+function getBgColor (hex) {
+  const sourceColor = Color(hex)
+  const negatedColor = sourceColor.negate()
+  if (sourceColor.contrast(negatedColor) >= 7) {
     return negatedColor
   }
-  return color.isDark() ? Color('white') : Color('black')
+  return sourceColor.isDark() ? Color('white') : Color('black')
 }
 
 function drawColorCircle (group, fgColorHex, bgColorHex) {
