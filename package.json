@@ -17,7 +17,7 @@
     "cov": "nyc npm test",
     "cov-html": "nyc --reporter=html npm test",
     "cov-lcov": "nyc --reporter=text-lcov npm test",
-    "lint": "eslint hexcodex/src/*.js"
+    "lint": "eslint ./src/*.js"
   },
   "keywords": [
     "color search",
