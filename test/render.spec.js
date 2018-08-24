@@ -41,17 +41,22 @@ describe('Image response', function () {
   it('should draw whole image', function () {
     const drawing = render.drawImage(fgColorHex, fgColorName)
     expect(drawing.attr('version')).to.equal(1.1)
-    // Expect('foobar').to.include('foo');
   }).timeout(1000)
 })
 
 describe('Generate colors', function () {
-  it('should select appropriate background color', function () {
-    expect(render.getBgColor(Color('#ffffff'))).to.deep.equal(Color('#000000'))
-    expect(render.getBgColor(Color('#888888'))).to.deep.equal(Color('#000000'))
-    expect(render.getBgColor(Color('#45dcff'))).to.deep.equal(Color('#000000'))
-    expect(render.getBgColor(Color('#c22147'))).to.deep.equal(Color('#ffffff'))
-    expect(render.getBgColor(Color('#3a243b'))).to.deep.equal(Color('#c5dbc4'))
+  it('should generate high-contrast background colors', function () {
+    const fgBgPairs = {
+      '#000000': '#ffffff',
+      '#c22147': '#ffffff',
+      '#ffffff': '#000000',
+      '#888888': '#000000',
+      '#45dcff': '#000000',
+      '#3a243b': '#c5dbc4'
+    }
+    for (const [key, value] of Object.entries(fgBgPairs)) {
+      expect(render.getBgColor(key).hex().toLowerCase()).to.equal(value)
+    }
   }).timeout(50)
 
   it('should generate the end color of rgb bar gradients', function () {

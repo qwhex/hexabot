@@ -1,6 +1,7 @@
+'use strict'
+
 const unidecode = require('unidecode')
 const Color = require('color')
-
 const namedColors = require('color-name-list')
 let colorOctree = require('color-octree') // todo ktree
 colorOctree.add(namedColors)
@@ -13,15 +14,6 @@ function createNameToColor (namedColors) {
   })
   return nameToColor
 }
-
-// const wordToColors = createWordToColors(namedColors)
-// function createWordToColors (namedColors) {
-//   let nameToColor = Object.create(null)
-//   namedColors.forEach(color => {
-//     nameToColor[slugify(color.name)] = color
-//   })
-//   return nameToColor
-// }
 
 const sortedColorNames = sortByLength(Object.keys(nameToColor))
 function sortByLength (names) {
@@ -118,15 +110,6 @@ function fuzzysearch (needle, haystack) {
   return matchIndexes
 }
 
-function getBgColor (hex) {
-  const sourceColor = Color(hex)
-  const negatedColor = sourceColor.negate()
-
-  if (sourceColor.contrast(negatedColor) >= 7) return negatedColor
-
-  return sourceColor.isDark() ? Color('white') : Color('black')
-}
-
 module.exports = {
   EXACT,
   APPROX,
@@ -135,6 +118,5 @@ module.exports = {
   search,
   searchByName,
   createNameToColor,
-  sortByLength,
-  getBgColor
+  sortByLength
 }

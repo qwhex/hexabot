@@ -18,9 +18,9 @@ function drawImage (fgColorHex, colorName) {
 function getBgColor (hex) {
   const sourceColor = Color(hex)
   const negatedColor = sourceColor.negate()
-  if (sourceColor.contrast(negatedColor) >= 7) {
-    return negatedColor
-  }
+
+  if (sourceColor.contrast(negatedColor) >= 7) return negatedColor
+
   return sourceColor.isDark() ? Color('white') : Color('black')
 }
 

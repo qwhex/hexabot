@@ -1,4 +1,5 @@
 /* eslint-env node, mocha */
+'use strict'
 
 const expect = require('chai').expect
 const search = require('../src/color-name-search')
@@ -20,9 +21,9 @@ describe('Data setup', function () {
       {name: 'grEEn'},
       {name: 'Blüe'}
     ])).to.deep.equal({
-      red: {name: 'Red'},
-      green: {name: 'grEEn'},
-      blue: {name: 'Blüe'}
+      'red': {name: 'Red'},
+      'green': {name: 'grEEn'},
+      'blue': {name: 'Blüe'}
     })
   }).timeout(10)
 
