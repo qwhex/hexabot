@@ -8,6 +8,7 @@ before_install:
   - sudo ./debian_install.sh
 install:
   - npm install
+  - npm run postinstall
   - npm install -g codecov istanbul
 script:
   - npm test
