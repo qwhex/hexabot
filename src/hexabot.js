@@ -1,7 +1,6 @@
 'use strict'
 
 const path = require('path')
-
 const fs = require('fs')
 const pn = require('pn/fs')
 const Color = require('color')
@@ -15,9 +14,10 @@ const search = require('./color-name-search')
 
 const DEBUG = false
 const TOKEN = process.env.HEXA_KEY
+const INCOMING_DIR = 'incoming'
 
 function setUpBot (bot) {
-  bot.catch(err => logError(err))
+  bot.catch(err => console.error(err))
   bot.start(ctx => ctx.reply(getWelcomeMessage()))
 
   bot.on('text', ctx => {
@@ -43,11 +43,12 @@ function sendTypingStatus (ctx) {
 function getWelcomeMessage () {
   return `Hi 🖖
 
+I'm Hexabot, a color helper.
 Start by sending a...
 
-    color code, like #fff, #ffffff, fff, rgb(...)
-    color name, like Berta Blue, Void or Garfield
-    or a picture (I will extract the colors)
+    color code, e.g #fff, #ffffff, fff, rgb(...)
+    color name, e.g. Cascade, Void, Garfield
+    a picture (I will extract the colors)
 
 Source code: https://github.com/qwhex/hexabot/
 
@@ -55,13 +56,16 @@ Have fun!`
 }
 
 function processIncomingImage (ctx, thumbnailId) {
-  const imgSavePath = path.resolve(__dirname, `./../cache/img/${thumbnailId}`)
+  const imgSavePath = path.resolve(__dirname, `./../cache/${INCOMING_DIR}/${thumbnailId}.png`)
+  console.info({imgSavePath})
   ctx.telegram.getFileLink(thumbnailId).then(thumbnailUrl => {
     fetch(thumbnailUrl).then(image => image.body
       .pipe(fs.createWriteStream(imgSavePath))
       .on('close', () => {
         for (const contentColor of extractColors(imgSavePath)) {
-          respond(ctx, search.understandColor(contentColor))
+          console.log({contentColor})
+          const result = search.search(contentColor).next().value
+          respond(ctx, result)
         }
       })
     )
@@ -73,26 +77,26 @@ function * extractColors (imgPath) {
   let img = new Image()
   img.src = fs.readFileSync(imgPath)
 
-  const extractedColors = Colibri.extractImageColors(img, 'css')
+  const extractedColors = Colibri.extractImageColors(img, 'hex')
   for (const contentColor of extractedColors.content) {
     yield contentColor
   }
 }
 
 function respond (ctx, result) {
-  const [matchType, colorName, colorHex] = result
-
-  if (matchType === search.INVALID) {
-    return ctx.reply(`🤷 ${colorName} 🤷`)
+  if (!result) {
+    return ctx.reply(`🤷`)
   }
 
-  const colorInfo = getInfoString(colorName, colorHex)
+  const {matchType, name, hex} = result
+
+  const colorInfo = getInfoString(name, hex)
 
   switch (matchType) {
   case search.EXACT:
-    return respondWithImage(ctx, result, `${colorInfo}`)
+    return respondWithImage(ctx, name, hex, `${colorInfo}`)
   case search.APPROX:
-    return respondWithImage(ctx, result, `Closest match:\n\n${colorInfo}`)
+    return respondWithImage(ctx, name, hex, `Closest match:\n\n${colorInfo}`)
   }
 }
 
@@ -103,18 +107,19 @@ function getInfoString (colorName, colorHex) {
   return [colorName, colorHex, rgb, hsl].join('\n')
 }
 
-function respondWithImage (ctx, result, caption) {
-  const [colorName, colorHex] = result.slice(1, 3)
-  const imagePath = getCachePathFor(colorHex)
+function respondWithImage (ctx, name, hex, caption) {
+  const imagePath = getCachePathFor(hex)
 
-  if (existsInCache(colorHex)) {
-    return sendImage(ctx, imagePath, colorHex, caption)
-  }
+  // FIXME
+  // if (existsInCache(hex)) {
+  //   console.log({imagePath})
+  //   return fs.open(imagePath, 'r', img => sendImage(ctx, imagePath, hex, caption))
+  // }
 
-  const svgSource = render.drawImage(colorHex, colorName).svg()
+  const svgSource = render.drawImage(hex, name).svg()
 
   convertToPng(svgSource, buffer => {
-    sendImage(ctx, buffer, colorHex, caption)
+    sendImage(ctx, buffer, hex, caption)
     saveInCache(imagePath)
   })
 }
@@ -122,7 +127,10 @@ function respondWithImage (ctx, result, caption) {
 function convertToPng (svgSource, callback) {
   svg2png(svgSource)
     .then(callback)
-    .catch(err => logError(err))
+    .catch(err => {
+      console.error('svg2png error')
+      console.error(err)
+    })
 }
 
 function sendImage (ctx, source, colorHex, caption) {
@@ -131,17 +139,17 @@ function sendImage (ctx, source, colorHex, caption) {
 
   return ctx.telegram.sendPhoto(
     chatId,
-    {source: source},
+    {source},
     {
       filename: colorHex + '.png',
       caption: caption,
       reply_to_message_id: messageId
     })
-    .catch(err => logError(err))
+    .catch(err => console.error('send error', err))
 }
 
 function saveInCache (imagePath, buffer) {
-  pn.writeFile(imagePath, buffer).catch(err => logError(err))
+  pn.writeFile(imagePath, buffer).catch(err => console.error(err))
 }
 
 function existsInCache (colorHex) {
@@ -150,15 +158,11 @@ function existsInCache (colorHex) {
 }
 
 function getCachePathFor (colorHex) {
-  return path.resolve(__dirname, `./../cache/${colorHex}.png`)
-}
-
-function logError (error) {
-  console.error(error)
+  return path.resolve(__dirname, `../cache/${colorHex}.png`)
 }
 
 function main () {
-  let bot = setUpBot(new Telegraf(TOKEN))
+  const bot = setUpBot(new Telegraf(TOKEN))
   bot.startPolling()
 }
 

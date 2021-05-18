@@ -10,7 +10,7 @@ describe('Bot Response', function () {
     const color = Color('#000000')
     const infoString = hexa.getInfoString(color)
     const infoLines = infoString.split('\n')
-    for (const line of infoLines.slice(1)) {
+    for (const line of infoLines.slice(2)) {
       expect(Color(line).rgb()).to.deep.equal(color.rgb())
     }
   }).timeout(20)
@@ -22,14 +22,12 @@ describe('Bot Response', function () {
 
 describe('Image Query', function () {
   it('should extract main colors', function () {
-    expect(hexa.extractColors('cache/#45dcff.png').next().value)
-      .to.deep.equal('rgb(69,219,254)')
+    expect(hexa.extractColors('test/assets/by_oda_iselin.jpg').next().value).to.equal('#fbb49f')
   })
 })
 
 describe('I/O', function () {
   it('should check if file exists in cache', function () {
-    // expect(hexa.existsInCache('anything')).to.equal(false)
     expect(hexa.existsInCache('notfound')).to.equal(false)
     expect(hexa.existsInCache('#123456')).to.equal(true)
   }).timeout(20)

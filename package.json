@@ -1,6 +1,6 @@
 {
   "name": "hexcodex",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Color helper telegram robot",
   "main": "./src/hexabot.js",
   "bin": {
@@ -32,38 +32,38 @@
   ],
   "author": {
     "name": "Mice Papai",
-    "email": "qwhexz@gmail.com",
-    "url": "https://qwhex.com"
+    "email": "hello@micepapai.com",
+    "url": "https://micepapai.com"
   },
   "license": "MIT",
   "dependencies": {
-    "canvas": "^1.6.11",
-    "colibrijs": "^1.0.0",
-    "color": "^3.0.0",
-    "color-name-list": "^4.11.0",
+    "canvas": "1.6.11",
+    "colibrijs": "1.0.0",
+    "color": "^3.1.3",
+    "color-name-list": "^8.11.0",
     "color-octree": "^2.2.1",
     "fuzzy": "^0.1.3",
     "fuzzysearch": "^1.0.3",
     "isomorphic-fetch": "^3.0.0",
-    "nearest-color": "^0.4.2",
+    "nearest-color": "^0.4.4",
     "pn": "^1.1.0",
-    "svg.js": "^2.6.5",
+    "svg.js": "^2.7.1",
     "svg2png": "^4.1.1",
     "svgdom": "0.0.15",
-    "telegraf": "^3.21.2",
+    "telegraf": "^3.38.0",
     "unidecode": "^0.1.8"
   },
   "devDependencies": {
-    "chai": "^4.1.2",
-    "eslint": "^5.4.0",
+    "chai": "^4.3.4",
+    "eslint": "^5.16.0",
     "eslint-config-standard": "^11.0.0",
-    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-import": "^2.23.2",
     "eslint-plugin-node": "^6.0.1",
     "eslint-plugin-promise": "^3.8.0",
     "eslint-plugin-standard": "^3.1.0",
     "mocha": "^5.2.0",
-    "node-gyp": "^5.0.7",
-    "nodemon": "^1.18.3",
-    "nyc": "^15.0.0"
+    "node-gyp": "^5.1.1",
+    "nodemon": "^1.19.4",
+    "nyc": "^15.1.0"
   }
 }

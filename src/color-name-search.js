@@ -3,12 +3,12 @@
 const unidecode = require('unidecode')
 const Color = require('color')
 const namedColors = require('color-name-list')
-let colorOctree = require('color-octree') // todo ktree
+const colorOctree = require('color-octree') // todo ktree
 colorOctree.add(namedColors)
 
 const nameToColor = createNameToColor(namedColors)
 function createNameToColor (namedColors) {
-  let nameToColor = Object.create(null)
+  const nameToColor = Object.create(null)
   namedColors.forEach(color => {
     nameToColor[slugify(color.name)] = color
   })

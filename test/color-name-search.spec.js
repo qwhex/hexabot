@@ -104,5 +104,5 @@ describe('Color Search', function () {
 
   it('should identify invalid color names', function () {
     expect(search.search('asdasdasd').next().value).to.equal(undefined)
-  }).timeout(150)
+  }).timeout(200)
 })
